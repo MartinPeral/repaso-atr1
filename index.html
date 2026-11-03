@@ -109,18 +109,1104 @@ pre{font-family:var(--f-mono);font-size:.78rem;line-height:1.55;background:var(-
 .review .exp{color:var(--muted);font-size:.92rem}
 .danger{color:var(--ko)}
 @media (prefers-reduced-motion: no-preference){.bar i{transition:width .3s ease}}
+
+/* Secciones nuevas */
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.btn.small{justify-content:center;text-align:center;padding:12px 8px;min-height:48px}
+.btn.small strong{font-size:.92rem}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.today{display:flex;flex-direction:column;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 14px}
+.check{display:flex;gap:12px;align-items:flex-start;padding:10px 0;cursor:pointer}
+.check+.check{border-top:1px solid var(--line)}
+.check input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--accent);flex:none}
+.check input:checked+span{color:var(--muted);text-decoration:line-through}
+.label.now{color:var(--accent)}
+.prose{display:flex;flex-direction:column;gap:10px;min-width:0}
+.prose h3{margin-top:10px;font-size:1.05rem}
+.prose h3:first-child{margin-top:0}
+.prose ul,.prose ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px}
+.prose pre{margin:0}
+.prose code{font-family:var(--f-mono);font-size:.86em;background:var(--code);padding:1px 4px;border-radius:4px;overflow-wrap:anywhere}
+.prose pre code{background:none;padding:0}
+.card-lite{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+details.case .prose{margin-top:8px}
+.opt.chosen{border-color:var(--accent);background:var(--accent-soft)}
+.review .sub{color:var(--muted);font-size:.82rem}
+.flash{display:flex;flex-direction:column;gap:14px;justify-content:center;width:100%;min-height:260px;margin-top:20px;padding:24px;border-radius:18px;
+  border:1px solid var(--line);background:var(--surface);text-align:left;cursor:pointer}
+.flash.back{background:var(--accent-soft);border-color:var(--accent)}
+.flash-text{font-family:var(--f-display);font-size:1.5rem;font-weight:800;line-height:1.25;text-wrap:balance}
+.flash-q{color:var(--muted);font-size:.9rem}
+.hero h2{font-size:1.6rem}
 </style>
 </head>
 <body>
-
-
 <div id="app"></div>
+<!-- ===================== TEORÍA ===================== -->
+<script type="text/markdown" id="ficha-dns">
+## Paradigmas
+- **Cliente-servidor:** servidor siempre activo con IP fija. Problema: cuello de botella. Puede haber servidores de respaldo y de apoyo.
+- **P2P:** sin servidor; los pares hablan entre sí. Problema: difícil de gestionar.
+- **Híbrido:** el servidor solo localiza a los pares (chat, VoIP).
+
+## Sistemas de nombres
+- **Plano:** sin estructura, administración centralizada, nombres únicos, poco escalable (el Internet inicial).
+- **Jerárquico:** con estructura, distribuido, el mismo nombre en ramas distintas; cada servidor gestiona su ámbito.
+
+## Qué es DNS
+- Servicios: nombre ↔ IP, alias y reparto de carga (varias IP para un nombre).
+- Define: espacio de nombres jerárquico, organización burocrática, protocolo de aplicación y base de datos distribuida.
+
+## Espacio de nombres
+- Árbol invertido. La raíz tiene etiqueta vacía (".").
+- Etiqueta: **máx. 63 caracteres**. Árbol: **máx. 127 niveles**.
+- Misma etiqueta permitida si **no son hermanos**.
+- **FQDN:** nombre absoluto terminado en punto (`www.dte.us.es.`).
+
+## Burocracia
+- **Raíz:** 13 servidores (a–m). Los coordina **IANA**, que crea y elimina TLD pero no los gestiona.
+- **TLD:** gTLD (.com .net .org libres; .edu .gov .mil restringidos; .cat .info patrocinados), ccTLD (.es…), **.arpa** (inversa), reservados (.test .example .invalid .localhost).
+- **Autoritativos:** los de cada organización.
+- **Registry** mantiene un TLD · **registrador** es el intermediario · **registrant** es el dueño · **whois** lo aloja el registry y lo actualiza el registrador.
+- **Delegación:** el padre solo guarda a quién preguntar (NS + A si hace falta).
+- **Zona** = lo que gestiona una entidad. **Dominio** = el subárbol entero.
+- **Master** tiene los datos originales; **slave** guarda una copia.
+
+## Resolución
+- Host → DNS por defecto: **recursiva**. DNS por defecto → jerarquía: **iterativas**.
+- Raíz y TLD **no aceptan recursivas** (tendrían que reservar recursos).
+- Si el DNS por defecto es autoritativo, responde con sus mapas. Si no, mira la caché y, si no lo tiene, recorre la jerarquía.
+
+## Caché y TTL
+- Guarda la respuesta y los servidores que intervinieron, cada línea durante su **TTL**.
+- TTL pequeño → más carga. TTL grande → posibles incoherencias.
+
+## Registros
+- **SOA:** servidor principal + correo del admin (1.er punto = @) + Serial (YYYYMMDDnn) · Refresh · Retry · Expire · Minimum (**TTL negativo**).
+- **NS:** servidores DNS, sin orden, pueden estar en otros dominios.
+- **MX:** correo; se usa primero el de **número menor**.
+- **A:** nombre → IP. **CNAME:** alias → nombre canónico. **PTR:** IP → nombre en `in-addr.arpa` (IP al revés).
+- `$ORIGIN` es el dominio por defecto, `@` lo sustituye y un nombre **sin punto final** recibe el $ORIGIN detrás.
+
+## Mensaje DNS
+Consulta · Respuestas · Autoridad · Adicional.
+
+## Pila de una consulta
+DNS / **UDP 53** / IP / Ethernet. El cliente se identifica por su puerto origen, su IP y su MAC.
+</script>
+
+<script type="text/markdown" id="ficha-ldap">
+## Servicio de directorio
+- Administra y organiza recursos y usuarios de una red.
+- Optimizado para **consultas** (usa caché), distribuido, extensible, con búsquedas avanzadas y replicación.
+
+## LDAP
+- RFC 4510–4519: **4511 protocolo**, **4512 modelos**, 4513 seguridad, **4519 esquema**. Versión **3**.
+- Basado en **X.500**, pero sobre **TCP/IP** (no OSI) y con menos operaciones.
+- Cliente-servidor: **DUA** (cliente) y **DSA** (servidor).
+- No dice cómo se almacena la información: es transparente para el cliente.
+- Dos modelos: **información** y **protocolo**.
+
+## Modelo de información
+- **DIB:** toda la información. Cada DSA gestiona un trozo.
+- **Entrada:** unidad básica. Puede ser objeto o **alias** (nombre alternativo).
+- **Atributo:** descripción + valores. No puede haber dos valores equivalentes ("john" = "JOHN" en givenName).
+- **Tipo de atributo:** sintaxis, si es multivaluado, reglas de comparación y si es de usuario u operacional. Se identifica con un **OID**.
+- **Clase de objeto:** atributos **requeridos** y **permitidos**, se identifica con un OID y **hereda** de sus superclases.
+- **Esquema:** impide clases subordinadas incorrectas, atributos no permitidos y valores con sintaxis mala.
+
+## DIT y nombres
+- **DIT:** el DIB organizado en árbol.
+- **RDN:** pares atributo=valor (se pueden unir con `+`), **único entre hermanos**.
+- **DN:** los RDN desde la entrada hasta la raíz, **único en todo el DIT**.
+- Profundidad **mínima**: el dominio puede ser un único nodo (`dc=us,dc=es`).
+
+## Administrativo y operacional
+- **objectClass:** está en todas las entradas; se puede modificar pero **no borrar**.
+- **Atributos operacionales:** no se devuelven salvo que se pidan. Ejemplos: creatorsName, createTimestamp, modifiersName, modifyTimestamp.
+- **Contexto de nombre:** subárbol de un único DSA maestro; su prefijo es el DN del nodo inicial.
+- Copias: servidores shadowing o caching.
+
+## Protocolo
+- **TCP 389**. Operaciones independientes y atómicas; no hace falta que sean síncronas.
+- Operaciones: Bind, Unbind, Unsolicited notification, Search, Modify, Add, Delete, Modify DN, Compare, Abandon, Start TLS y Extended.
+- Respuesta: **un solo código** de resultado, diagnosticMessage (texto libre, puede ir vacío) y matchedDN.
+- **Referral:** "yo no, pero prueba aquí" (al menos una URI). No aparece en Unbind ni en Abandon. El cliente debe evitar bucles.
+</script>
+
+<script type="text/markdown" id="ficha-ftp">
+## TFTP (RFC 1350)
+- **UDP 69**. Simple y no fiable, sin carpetas ni cifrado. Para ficheros pequeños.
+- Opcodes: **1 RRQ · 2 WRQ · 3 DATA · 4 ACK · 5 ERROR**.
+- RRQ y WRQ: nombre, 0, modo (**netascii** u **octet**), 0 y opciones.
+- RRQ → **DATA 1** o ERROR. WRQ → **ACK 0** o ERROR.
+- DATA: número de bloque (1–65535) + **0–512 bytes**. ACK: solo el número de bloque.
+- Último bloque: **menos de 512 bytes**. Si el tamaño es múltiplo de 512 → DATA final de **0 bytes**.
+- Perder un mensaje = retransmitir todo el fichero.
+- Errores: 0 no definido · **1 File not found** · **2 Access violation** · 3 Disk full · **6 File already exists**.
+
+## Cuenta de mensajes
+- N bloques de datos = ⌊tamaño/512⌋ + 1.
+- **Lectura:** RRQ + N DATA + N ACK.
+- **Escritura:** WRQ + ACK 0 + N DATA + N ACK.
+
+## FTP (RFC 959)
+- **TCP**, dos conexiones: **control 21** y **datos 20** (activo).
+- **Activo:** el **servidor** abre los datos desde el puerto 20.
+- **Pasivo:** el cliente manda **PASV**, el servidor responde **PORT** con un puerto y el **cliente** abre los datos.
+- Se negocian el puerto de datos, el modo (activo o pasivo) y la transferencia (ASCII o binario).
+- Comandos del protocolo: USER, PASS, LIST, **RETR** (bajar), **STOR** (subir).
+- Comandos del cliente: cd, get, put, mkdir, exit.
+- Respuestas: **331** falta la contraseña · **125** empieza la transferencia · **425** no se abre la conexión de datos · **452** error al escribir.
+- Configuración: puertos, máximo de conexiones (total y por IP), timeout, mensajes, usuarios y anónimos, grupos, permisos rwx, ancho de banda y logs.
+</script>
+
+<script type="text/markdown" id="reglas">
+## 1. Lee el nombre de derecha a izquierda
+`www.a2.rediris.com.` → raíz → com → rediris → a2 → www. Cada servidor solo conoce al siguiente.
+
+## 2. Cada referencia es una pareja NS + A
+- **NS:** quién lleva el dominio. **A:** dónde está ese servidor.
+- El A (glue) es imprescindible si el servidor está **dentro** del dominio que se delega.
+- La respuesta final es solo un A (o un CNAME + A).
+
+## 3. Recursiva arriba, iterativas abajo
+- Cliente → DNS por defecto: recursiva.
+- DNS por defecto → raíz, TLD y autoritativos: iterativas.
+- Raíz y TLD no aceptan recursivas: si te los ponen como DNS por defecto, solo dan una referencia.
+
+## 4. Solo guarda caché quien resuelve
+El DNS por defecto. Los que reciben iterativas responden con sus propios datos y no aprenden nada.
+
+## 5. Para una consulta nueva con caché
+1. ¿Está vivo el registro final (TTL > tiempo transcurrido)? Se responde desde la caché.
+2. Si no, busca el **NS vivo más cercano** al nombre **que además tenga vivo su A**.
+3. Si no queda ninguno, empieza por la raíz.
+Un A vivo sin su NS no sirve: no sabes qué dominio lleva ese servidor.
+
+## 6. Reconstruir el viaje desde una caché
+- El único A que no es de un servidor DNS es lo que se preguntó.
+- Si no hay NS de un nivel, el servidor era **autoritativo** de ese nivel.
+- Paquete de respuesta: **origen = servidor**, **destino = cliente**.
+
+## 7. ¿Quién es esa IP?
+Antes de contestar, identifica la IP: ¿un DNS por defecto, un autoritativo, un TLD o un cliente? Si te dicen que los DNS están en un rango (100.0.0.0/8…), una IP fuera de ese rango **no es un DNS**.
+
+## 8. ¿Autoritativa o no?
+Autoritativa si responde un servidor **de la zona** (primario o secundario). Si responde desde la caché, no lo es ("Non-authoritative answer").
+
+## 9. Tiempos que preguntan
+- Cambio de un registro: los secundarios lo copian en **Refresh** + las cachés lo guardan su **TTL**. Máximo: Refresh + TTL.
+- Respuesta negativa en caché: dura el **Minimum** del SOA.
+- El primario parado: el secundario responde hasta **Expire**, y no se pueden hacer cambios (se hacen en el primario).
+
+## 10. Añadir un dominio
+- **Padre:** NS + A (glue) del nuevo servidor.
+- **Zona nueva:** SOA, NS, A del servidor, MX y A del correo.
+- Un host nuevo en una zona que ya existe: solo su A en esa zona.
+- Un alias va en la zona **del alias**. Un PTR, en la zona inversa de la IP (al revés).
+
+## 11. Errores típicos en ficheros de zona
+- Nombre **sin punto final** → se le pega el $ORIGIN.
+- Registros de **otra zona** metidos en esta.
+- MX o NS que apuntan a nombres **sin A**.
+- SOA con un primario que no aparece en los NS.
+- Erratas entre el NS y su A (severA ≠ serverA).
+- Un espacio dentro de un nombre ("serverd. enero…").
+</script>
+
+<!-- ===================== BOLETÍN: ENUNCIADOS Y SOLUCIONES ===================== -->
+<script type="text/markdown" id="enu-2.1">
+Listín telefónico LDAP para la Universidad de Sevilla (raíz `dc=us,dc=es`): un directorio **corporativo** con los teléfonos de todo el personal y un **listín personal** para cada trabajador. Cada entrada lleva al menos nombre (givenName), apellidos (sn) y teléfono (tel). Puede haber **personas con el mismo nombre** y **teléfonos compartidos**.
+</script>
+<script type="text/markdown" id="sol-2.1">
+## a) DIT
+```
+dc=us,dc=es
+ ├─ ou=corporativo
+ │    └─ givenName=…+sn=…+tel=…      (contacto)
+ └─ ou=personal
+      └─ uid=orivera                 (trabajador)
+           └─ givenName=…+sn=…+tel=… (contacto)
+```
+- **dominio** (`dc`): raíz.
+- **organizationalUnit** (`ou`): corporativo y personal.
+- **trabajador:** uid (requerido), givenName, sn.
+- **contacto:** givenName, sn, tel (requeridos); mail (opcional).
+
+## b) RDN
+Ni el nombre (hay homónimos) ni el teléfono (se comparte) bastan por separado. Se combinan:
+`givenName=Octavio+sn=Rivera+tel=954552789`
+
+## c) DN
+`givenName=Octavio+sn=Rivera+tel=954552789, ou=corporativo, dc=us, dc=es`
+</script>
+
+<script type="text/markdown" id="enu-2.2">
+Clase `record` para las hojas de un DIT de records españoles de atletismo. Atributos: prueba, cat (Masculino/Femenina), fecha, lugar, marca y atleta. Ejemplos de DN:
+```
+prueba=100m+cat=Masculino, OU=Carreras, dc=recordAtletismo, dc=es
+prueba=1500m+cat=Femenina, OU=Carreras, dc=recordAtletismo, dc=es
+prueba=Triple+cat=Masculino, OU=Saltos, dc=recordAtletismo, dc=es
+prueba=Disco+cat=Femenina, OU=Lanzamientos, dc=recordAtletismo, dc=es
+```
+</script>
+<script type="text/markdown" id="sol-2.2">
+## a) ¿Histórico?
+**No.** El RDN es prueba+cat, así que solo cabe **una** entrada por prueba y categoría bajo cada OU. Para un histórico habría que añadir la fecha al RDN (`prueba=100m+cat=Masculino+fecha=…`) o un nivel más.
+
+## b) ¿Record compartido?
+**Sí**, si el atributo `atleta` se define como **multivaluado**: una sola entrada con dos valores de atleta. El RDN no incluye al atleta, así que no hay conflicto.
+
+## c) Carreras
+Es una **unidad organizativa** (`organizationalUnit`). Agrupa las entradas de las pruebas de carreras, como Saltos y Lanzamientos agrupan las suyas.
+
+## d) Bruno Hortelano
+Como mínimo **3 hojas**: `prueba=100m+cat=Masculino`, `prueba=200m+cat=Masculino` y `prueba=400m+cat=Masculino`, todas bajo `OU=Carreras`.
+</script>
+
+<script type="text/markdown" id="enu-2.3">
+Entradas de un DIT:
+```
+sn=Rivera+givenName=Octavio, ou=Informática, ou=Investigador, dc=paidi, dc=andalucia, dc=es
+sn=Martín+givenName=Isabel, ou=Medicina, ou=Investigador, dc=paidi, dc=andalucia, dc=es
+sn=Saldaña+givenName=David, ou=Psicología, ou=Investigador, dc=paidi, dc=andalucia, dc=es
+```
+La raíz ocupa el primer nivel.
+</script>
+<script type="text/markdown" id="sol-2.3">
+## a) Profundidad mínima: 4
+El dominio `dc=paidi,dc=andalucia,dc=es` puede ser **un único nodo** raíz (nivel 1) → `ou=Investigador` (2) → `ou=Informática` (3) → entrada (4). Si cada dc fuera un nodo, serían 6, pero piden el mínimo.
+
+## b) Octavio Rivera en Medicina
+**Sí.** Colgaría de `ou=Medicina`, que es otro padre. Su RDN `sn=Rivera+givenName=Octavio` solo tiene que ser único entre hermanos.
+
+## c) Informática
+`organizationalUnit`.
+
+## d) Referral 130.23.2.45
+El servidor consultado **no tiene esa entrada** (o no puede hacer la operación), pero sabe que otro servidor LDAP, el de **130.23.2.45**, puede tenerla. El cliente debe repetir la consulta allí. Formalmente, el referral es una URI (`ldap://130.23.2.45/…`).
+</script>
+
+<script type="text/markdown" id="enu-2.4">
+DN configurados (existe un único nodo que representa al dominio):
+```
+sn=Rivera+mail=orivera@us.es, ou=Tecnología Electrónica, ou=Informática, dc=us, dc=es
+sn=Sivianes+mail=sivianes@us.es, ou=Tecnología Electrónica, ou=Informática, dc=us, dc=es
+sn=Dorronzoro+mail=edorronzoro@us.es, ou=Tecnología Electrónica, ou=Informática, dc=us, dc=es
+sn=Sevillano+mail=jlsevillano@us.es, ou=Arquitectura y Tecnologías de Computadores, ou=Informática, dc=us, dc=es
+sn=Saldaña+mail=saldana@us.es, ou=Psicología evolutiva y de la Educación, ou=Psicología, dc=us, dc=es
+```
+Al buscar a Francisco Sivianes llegan dos entradas: una creada por `cn=AdminETSII` (g1.61) y otra por `cn=AdminEPS` (P10). Hay un subárbol por cada escuela o facultad.
+</script>
+<script type="text/markdown" id="sol-2.4">
+## a) DIT
+```
+dc=us,dc=es
+ ├─ ou=Informática
+ │   ├─ ou=Tecnología Electrónica
+ │   │   ├─ sn=Rivera+mail=orivera@us.es
+ │   │   ├─ sn=Sivianes+mail=sivianes@us.es
+ │   │   └─ sn=Dorronzoro+mail=edorronzoro@us.es
+ │   └─ ou=Arquitectura y Tecnologías de Computadores
+ │       └─ sn=Sevillano+mail=jlsevillano@us.es
+ └─ ou=Psicología
+     └─ ou=Psicología evolutiva y de la Educación
+         └─ sn=Saldaña+mail=saldana@us.es
+```
+
+## b) URL de la ETSI Informática
+Sí: en la entrada **`ou=Informática`**, que representa a la escuela, con un atributo para URL como `labeledURI`. Si su clase (`organizationalUnit`) no lo permite, se le añade una clase auxiliar que lo incluya o se extiende el esquema.
+
+## c) Oscar Rivera con orivera@us.es
+**No.** Su RDN sería `sn=Rivera+mail=orivera@us.es`, idéntico al de Octavio, que es su hermano bajo Tecnología Electrónica.
+
+## d) DSA y creatorsName
+- Las dos entradas las crearon administradores distintos (ETSII y EPS): vienen de **dos subárboles** (dos escuelas), así que se han consultado **como mínimo 2 DSA**.
+- `creatorsName` es un **atributo operacional**.
+</script>
+
+<script type="text/markdown" id="enu-2.5">
+```
+cn=Ruth Beitia, ou=Atletismo, ou=Deportista, dc=fe, dc=es
+cn=Rafael Nadal, ou=Tenis, ou=Deportista, dc=fe, dc=es
+cn=Pau Gasol, ou=Baloncesto, ou=Deportista, dc=fe, dc=es
+cn=Carolina Marín, ou=Bádminton, ou=Deportista, dc=fe, dc=es
+cn=Julen Lopetegui, ou=Fútbol, ou=Entrenador, dc=fe, dc=es
+cn=Marco Rufo, ou=Atletismo, ou=Entrenador, dc=fe, dc=es
+```
+La raíz es fe.es.
+</script>
+<script type="text/markdown" id="sol-2.5">
+## a) DIT
+```
+dc=fe,dc=es
+ ├─ ou=Deportista
+ │   ├─ ou=Atletismo  → cn=Ruth Beitia
+ │   ├─ ou=Tenis      → cn=Rafael Nadal
+ │   ├─ ou=Baloncesto → cn=Pau Gasol
+ │   └─ ou=Bádminton  → cn=Carolina Marín
+ └─ ou=Entrenador
+     ├─ ou=Fútbol     → cn=Julen Lopetegui
+     └─ ou=Atletismo  → cn=Marco Rufo
+```
+`ou=Atletismo` aparece dos veces con padres distintos: es válido.
+
+## b) Clases
+- Baloncesto: `organizationalUnit`.
+- Rafael Nadal: una clase de persona, por ejemplo `inetOrgPerson`.
+
+## c) Atleta llamado Marco Rufo
+**Sí.** Colgaría de `ou=Atletismo, ou=Deportista`, un padre distinto al del entrenador Marco Rufo. Su DN sería distinto.
+</script>
+
+<script type="text/markdown" id="enu-2.6">
+empresa.com quiere un directorio LDAP con nombre completo, apellidos, teléfono, correo y dirección de sus empleados. Hay tres departamentos (investigación, desarrollo y administración). El equipo directivo **no** pertenece a ninguno.
+</script>
+<script type="text/markdown" id="sol-2.6">
+## a) DIT y clases
+```
+dc=empresa,dc=com                 (dcObject / organization)
+ ├─ ou=Investigación              (organizationalUnit)
+ ├─ ou=Desarrollo                 (organizationalUnit)
+ ├─ ou=Administración             (organizationalUnit)
+ └─ ou=Dirección                  (organizationalUnit)
+      └─ cn=…                     (inetOrgPerson)
+```
+Empleados: `inetOrgPerson` con cn, sn, telephoneNumber, mail y postalAddress. Los directivos van en su propia `ou=Dirección` (o directamente bajo el dominio).
+
+## b) RDN y DN
+- RDN de un empleado: `cn=Nombre Apellidos`.
+- DN del director: `cn=Nombre Director, ou=Dirección, dc=empresa, dc=com`.
+
+## c) Dos Luis Expósito
+Los dos usan `cn=Luis Expósito`, porque cuelgan de padres distintos:
+- `cn=Luis Expósito, ou=Investigación, dc=empresa, dc=com`
+- `cn=Luis Expósito, ou=Administración, dc=empresa, dc=com`
+</script>
+
+<script type="text/markdown" id="enu-2.7">
+CAAC: 8 delegaciones provinciales. Cada una tiene asociaciones (la sevillana: Noé, Vida, Galgos, Mascotas, Hogar y Cabaña). De cada animal se guarda: número identificativo, nombre, tipo, estado (rehabilitación, disponible, acogida o adopción) y los datos del dueño o padrino (nombre, dni, dirección, teléfono, mail).
+</script>
+<script type="text/markdown" id="sol-2.7">
+## a) Esquema
+- **animal:** `idAnimal` (requerido, RDN), nombre, tipo, estado y `responsable` (DN de una persona, opcional y multivaluado si hace falta).
+- **personaCAAC:** `dni` (requerido, RDN), nombre, postalAddress, telephoneNumber y mail.
+- Delegaciones y asociaciones: `organizationalUnit`.
+
+## b) DIT
+```
+dc=caac,dc=es
+ ├─ ou=Sevilla
+ │   ├─ ou=Noé
+ │   │   ├─ idAnimal=1001   (tipo=perro, estado=adopción, responsable=dni=1234…)
+ │   │   └─ idAnimal=1002
+ │   ├─ ou=Vida  …  ou=Cabaña
+ ├─ ou=Málaga  …  (8 delegaciones)
+ └─ ou=Personas
+     └─ dni=12345678A
+```
+
+## c) ¿Dueño o padrino de varios perros?
+**Sí.** La persona es una entrada propia y cada animal la referencia con su DN en `responsable`. Una persona puede aparecer en tantos animales como haga falta. Si sus datos se copiaran como atributos dentro de cada animal también funcionaría, pero repitiendo información.
+</script>
+
+<script type="text/markdown" id="enu-2.8">
+Directorio de asignaturas y profesores del grado. Todo profesor pertenece a un departamento. Cada asignatura está adscrita al departamento de su profesor y la imparten uno o varios profesores. Profesor: nombre, apellidos, email y teléfono. Asignatura: nombre, curso y cuatrimestre. Puede haber **dos personas con el mismo nombre en el mismo departamento**. Solo el curso actual.
+</script>
+<script type="text/markdown" id="sol-2.8">
+## a) DIT
+```
+dc=us,dc=es
+ └─ ou=Tecnología Electrónica            (organizationalUnit)
+     ├─ ou=Profesores
+     │   └─ uid=orivera                  (profesor)
+     └─ ou=Asignaturas
+         └─ cn=ATR1                      (asignatura)
+```
+- **profesor:** `uid` (RDN, único aunque coincidan los nombres), givenName, sn, mail, telephoneNumber.
+- **asignatura:** `cn` (RDN), curso, cuatrimestre, `profesor` (DN, **multivaluado**).
+
+## b) Ejemplos
+- `uid=orivera, ou=Profesores, ou=Tecnología Electrónica, dc=us, dc=es`
+- `cn=ATR1, ou=Asignaturas, ou=Tecnología Electrónica, dc=us, dc=es` con `profesor: uid=orivera, ou=Profesores, …`
+
+## c) Valoraciones
+Se amplía el esquema con atributos **opcionales** (MAY): `dificultad` en la clase asignatura y `valoracion` en la clase profesor, o se añade una clase auxiliar con ellos.
+</script>
+
+<script type="text/markdown" id="enu-3.1">
+El host A quiere **mandar** el fichero `prueba.txt`, de **1024 bytes**, por TFTP. Escribe los mensajes entre cliente y servidor.
+</script>
+<script type="text/markdown" id="sol-3.1">
+Mandar = escribir → **WRQ**. 1024 = 512 + 512 + **0** (es múltiplo de 512, así que va un último DATA vacío).
+```
+C → S  WRQ  [02 | prueba.txt | 0 | netascii | 0]
+S → C  ACK  [04 | 0]
+C → S  DATA [03 | 1 | 512 B]
+S → C  ACK  [04 | 1]
+C → S  DATA [03 | 2 | 512 B]
+S → C  ACK  [04 | 2]
+C → S  DATA [03 | 3 | 0 B]   ← último (< 512)
+S → C  ACK  [04 | 3]
+```
+En total, 8 mensajes.
+</script>
+
+<script type="text/markdown" id="enu-3.2">
+Cronograma TFTP con errores. El cliente tiene `fichero1.txt` (1024 B). El servidor tiene `prueba.txt` (230 B), `test.txt` (450 B) y `foto.jpg` (1236 B). Secuencia dibujada:
+```
+[Establecimiento de conexión TCP]
+C → S  RRQ prueba.txt
+S → C  ACK
+S → C  DATA prueba.txt (1)
+C → S  WRQ fichero1.txt
+S → C  ACK
+C → S  DATA fichero1.txt (1)
+S → C  ACK
+C → S  DATA fichero1.txt (2)
+S → C  ACK
+C → S  RRQ test1.jpg
+S → C  DATA test1.jpg (1)
+S → C  WRQ foto.jpg
+C → S  ACK
+```
+</script>
+<script type="text/markdown" id="sol-3.2">
+## Errores
+1. **No hay conexión TCP:** TFTP usa UDP (puerto 69).
+2. **RRQ prueba.txt → ACK:** a un RRQ se responde directamente con **DATA 1**, no con un ACK.
+3. **Falta el ACK 1** del cliente tras el DATA de prueba.txt (230 B, un único bloque).
+4. Los DATA **no llevan el nombre** del fichero, solo el número de bloque. Los ACK deben llevar su número (ACK 0 tras el WRQ, ACK 1, ACK 2…).
+5. **fichero1.txt (1024 B):** falta un **DATA 3 de 0 bytes** y su **ACK 3**, porque el tamaño es múltiplo de 512.
+6. **RRQ test1.jpg:** el servidor no tiene ese fichero, así que debe responder **ERROR código 1 (File not found)**.
+7. **WRQ foto.jpg desde el servidor:** las peticiones (RRQ y WRQ) las hace siempre el **cliente**. Además, el cliente no tiene foto.jpg y el servidor ya la tiene: si el cliente la intentara escribir, recibiría **ERROR 6 (File already exists)**. El ACK final del cliente también sobra.
+</script>
+
+<script type="text/markdown" id="enu-3.3">
+teclix.dte.us.es. tiene un servidor TFTP. Un cliente quiere **guardar** el fichero de texto `apuntesRC.txt` (**1534 B**) en el servidor.
+</script>
+<script type="text/markdown" id="sol-3.3">
+## a)
+**UDP**, al **puerto 69** del servidor.
+
+## b)
+1534 = 512 + 512 + **510**.
+```
+C → S  WRQ  [02 | apuntesRC.txt | 0 | netascii | 0]
+S → C  ACK  [04 | 0]          (permiso para escribir)
+C → S  DATA [03 | 1 | 512 B]
+S → C  ACK  [04 | 1]
+C → S  DATA [03 | 2 | 512 B]
+S → C  ACK  [04 | 2]
+C → S  DATA [03 | 3 | 510 B]  *
+S → C  ACK  [04 | 3]
+```
+**\*** El DATA 3 es el último porque mide 510 B, **menos de 512**.
+</script>
+
+<script type="text/markdown" id="enu-4.1">
+Servidores primarios bajo una raíz:
+```
+www.informatica.us.es       HTTP  150.214.115.75
+mail.informatica.us.es      SMTP  150.214.100.43   (informatica.us.es)
+dns_info.informatica.us.es  DNS   150.214.7.101    gestiona informatica.us.es.
+dns1.finantial.com          DNS   138.17.117.4     gestiona finantial.com.
+www.finantial.com           HTTP  138.17.117.15
+ftp.finantial.com           FTP   138.17.117.7
+pppserver.sports.com        Stream 146.10.158.4
+dns_sports.sports.com       DNS   146.10.158.16    gestiona sports.com.
+servidor_dns1.es            DNS   100.100.102.100  gestiona es.
+dns_server1.com             DNS   99.99.99.99      gestiona com.
+onix.us.es                  DNS   150.214.186.69   gestiona us.es.
+```
+Un PC (102.73.18.14) con DNS por defecto 120.20.20.12 quiere entrar en www.informatica.us.es. Después se añade fisica.us.es (DNS 150.214.8.10 y correo 150.214.8.11).
+</script>
+<script type="text/markdown" id="sol-4.1">
+## a) Jerarquía
+```
+                     .
+          ┌──────────┴───────────┐
+          es                     com
+    ┌─────┴──────┐      ┌────────┼──────────┐
+    us   servidor_dns1  finantial  sports   dns_server1
+ ┌──┴────┐             (dns1,www,ftp) (pppserver,dns_sports)
+onix  informatica
+     (www, mail, dns_info)
+```
+
+## b) 7 zonas
+- `.`: raíz.
+- `es.`: servidor_dns1.es, 100.100.102.100 (TLD).
+- `com.`: dns_server1.com, 99.99.99.99 (TLD).
+- `us.es.`: onix, 150.214.186.69 (autoritativo).
+- `informatica.us.es.`: dns_info, 150.214.7.101 (autoritativo).
+- `finantial.com.`: dns1, 138.17.117.4 (autoritativo; el enunciado tiene la errata "financial").
+- `sports.com.`: dns_sports, 146.10.158.16 (autoritativo).
+
+## c.1) Resolución
+1. PC → 120.20.20.12: ¿A www.informatica.us.es? (**recursiva**)
+2. → raíz (iterativa): `es. NS servidor_dns1.es.` + A 100.100.102.100
+3. → servidor_dns1.es: `us.es. NS onix.us.es.` + A 150.214.186.69
+4. → onix: `informatica.us.es. NS dns_info…` + A 150.214.7.101
+5. → dns_info: `www.informatica.us.es. A 150.214.115.75` (autoritativa)
+6. 120.20.20.12 → PC
+
+## c.2) Caché del DNS por defecto
+```
+es.                         IN NS servidor_dns1.es.
+servidor_dns1.es.           IN A  100.100.102.100
+us.es.                      IN NS onix.us.es.
+onix.us.es.                 IN A  150.214.186.69
+informatica.us.es.          IN NS dns_info.informatica.us.es.
+dns_info.informatica.us.es. IN A  150.214.7.101
+www.informatica.us.es.      IN A  150.214.115.75
+```
+
+## c.3) Resto de servidores
+Nada: solo recibieron iterativas.
+
+## d) fisica.us.es
+En **us.es.** (onix):
+```
+fisica.us.es.      IN NS dns.fisica.us.es.
+dns.fisica.us.es.  IN A  150.214.8.10
+```
+En **fisica.us.es.** (150.214.8.10): SOA, NS dns.fisica.us.es., A del DNS, `MX 10 mail.fisica.us.es.` y `mail.fisica.us.es. A 150.214.8.11`.
+</script>
+
+<script type="text/markdown" id="enu-4.2">
+```
+tftp1.docsis.finantial.com.      172.26.1.10  TFTP
+dns_doc.docsis.finantial.com.    172.26.1.11  DNS  gestiona docsis.finantial.com.
+pppserver.docsis2.finantial.com. 172.26.3.7   SSH
+dns_doc2.finantial.com.          172.26.3.8   DNS  gestiona finantial.com.
+ftp_arch.ojm.com.                172.32.10.2  FTP
+dns1.ojm.com.                    172.32.10.3  DNS  gestiona ojm.com.
+www.ojm.com.                     172.32.12.4  HTTP
+coco.labcom.org.                 10.0.12.3    STREAMING
+(sin nombre)                     10.0.12.4    DNS  gestiona labcom.org.
+www.informatica.us.es.           192.168.12.100 HTTP
+wjade.informatica.us.es.         192.168.12.53  HTTP
+dns_info.informatica.us.es.      192.168.12.40  DNS gestiona informatica.us.es.
+mailserverY.europa.es.           10.0.10.100  MAIL de europa.es.
+dns_eur.europa.es.               10.0.10.120  DNS  gestiona europa.es
+```
+</script>
+<script type="text/markdown" id="sol-4.2">
+## a) Jerarquía
+```
+                         .
+        ┌────────────────┼──────────────┐
+       com              org             es
+   ┌────┴─────┐          │         ┌────┴─────┐
+finantial    ojm       labcom      us       europa
+ ├ docsis   (ftp_arch, (coco,      └ informatica   (mailserverY,
+ │ (tftp1,   dns1,www)  server_labcom)  (www,wjade,   dns_eur)
+ │  dns_doc)                             dns_info)
+ ├ docsis2 (pppserver)
+ └ dns_doc2
+```
+
+## b) Zonas bajo com (incluida)
+- `com.`: server_com, IP_server_com (TLD).
+- `finantial.com.`: dns_doc2.finantial.com, 172.26.3.8 (primario). Incluye pppserver.docsis2.finantial.com (172.26.3.7, SSH): **docsis2 no es una zona aparte** porque no tiene DNS.
+- `docsis.finantial.com.`: dns_doc.docsis…, 172.26.1.11 (primario) y tftp1, 172.26.1.10.
+- `ojm.com.`: dns1.ojm.com, 172.32.10.3 (primario), ftp_arch 172.32.10.2 y www 172.32.12.4.
+
+## c) coco.labcom.org
+La resuelve de forma autoritativa el servidor de labcom.org (**server_labcom, 10.0.12.4**). El primario de `org.` solo tiene la delegación:
+```
+labcom.org.                IN NS server_labcom.labcom.org.
+server_labcom.labcom.org.  IN A  10.0.12.4
+```
+
+## d) arquitectura.europa.es
+En **europa.es.** (dns_eur):
+```
+arquitectura.europa.es.          IN NS dns_ar.arquitectura.europa.es.
+dns_ar.arquitectura.europa.es.   IN A  10.0.200.12
+```
+En **arquitectura.europa.es.** (dns_ar): SOA, NS, A de dns_ar, `MX 10 correoar.arquitectura.europa.es.` y `correoar… A 10.0.201.11`.
+
+## e) Haile → www.informatica.us.es
+1. Haile → 100.10.12.2 (recursiva).
+2. → raíz: NS server_es + A.
+3. → server_es: NS server_us + A.
+4. → server_us: NS dns_info + A 192.168.12.40.
+5. → dns_info: A 192.168.12.100 (autoritativa).
+6. → Haile.
+
+Caché de 100.10.12.2: las parejas NS + A de es, us.es e informatica.us.es, y `www.informatica.us.es. A 192.168.12.100`.
+
+## f) Pila
+DNS (aplicación) / **UDP**, puerto destino 53 / IP / Ethernet. El cliente se identifica por su **puerto origen UDP**, su **IP origen** y su **MAC origen**.
+</script>
+
+<script type="text/markdown" id="enu-4.3">
+Jerarquía (óvalo = dominio con servidor DNS, rectángulo = host):
+```
+.
+├─ eu
+│  ├─ spain
+│  │  ├─ granada: ftp, motril (www, mail)
+│  │  └─ sevilla: ftp, www
+│  └─ france
+│     └─ paris: paris, dgb
+└─ asia
+   ├─ rusia: mail, correo
+   └─ china
+      └─ pekin: ftp, www
+```
+Servidores DNS: dnsp_XXX, IP: IP_yyy. pc12.otrodominio.down.org pregunta correo.rusia.asia. a través de dnsp_default (en su mismo dominio y no autoritativo de estas zonas).
+</script>
+<script type="text/markdown" id="sol-4.3">
+## a)
+- Primarios: uno por óvalo → **12** (raíz, eu, asia, spain, france, rusia, china, granada, sevilla, paris, pekin, motril).
+- TLD: **2** (eu y asia).
+
+## b)
+- FQDN del DNS por defecto: **dnsp_default.otrodominio.down.org.**
+- Resolución:
+    1. pc12 → dnsp_default (recursiva).
+    2. → raíz: `asia. NS dnsp_asia.asia.` + A.
+    3. → dnsp_asia: `rusia.asia. NS dnsp_rusia.rusia.asia.` + A.
+    4. → dnsp_rusia: `correo.rusia.asia. A IP_correo` (autoritativa).
+    5. → pc12.
+- Caché (solo dnsp_default):
+```
+asia.                    IN NS dnsp_asia.asia.
+dnsp_asia.asia.          IN A  IP_dnsp_asia
+rusia.asia.              IN NS dnsp_rusia.rusia.asia.
+dnsp_rusia.rusia.asia.   IN A  IP_dnsp_rusia
+correo.rusia.asia.       IN A  IP_correo
+```
+- www.pekin.china.asia.: el NS de asia está en caché, así que **se salta la raíz**: dnsp_asia → dnsp_china → dnsp_pekin.
+
+## c) fcd.paris.france.eu.
+**Sí.** En **paris.france.eu** (dnsp_paris): `fcd.paris.france.eu. NS dnsp_fcd.fcd.paris.france.eu.` + su A. En la zona nueva: SOA, NS, A de dnsp_fcd, `MX 10 mail.fcd.paris.france.eu.` y el A de mail.
+</script>
+
+<script type="text/markdown" id="enu-4.4">
+Zonas: us.es · imse.cnm.es · ict.norut.no · ht.norut.no · tokio.jp · rob.chiba.jp · soc.chiba.jp · kyoto.jp.
+Los autoritativos de **primer nivel** tienen `www` y `mail`. Los de **segundo nivel** tienen `fileserver`. Servidores DNS: `dnsp_zona`. IP: `IP_server`. pcA usa dnsp_default (no autoritativo de nada).
+Secundarios: `dnss1.kyoto.jp.` para cnm.es. y `dnss2.norut.no.` para norut.no.
+</script>
+<script type="text/markdown" id="sol-4.4">
+## a) Jerarquía
+Para que existan las de segundo nivel también tienen que existir **cnm.es, norut.no y chiba.jp**.
+```
+.
+├─ es ── us (www, mail) · cnm (www, mail) ── imse (fileserver)
+├─ no ── norut (www, mail) ── ict (fileserver) · ht (fileserver)
+└─ jp ── tokio (www, mail) · kyoto (www, mail) · chiba (www, mail) ── rob (fileserver) · soc (fileserver)
+```
+
+## b) fileserver.ict.norut.no.
+pcA → dnsp_default (recursiva) → raíz (NS dnsp_no) → dnsp_no (NS dnsp_norut) → dnsp_norut (NS dnsp_ict) → dnsp_ict (A IP_fileserver) → pcA.
+
+## c) Caché (solo dnsp_default)
+NS + A de `no.`, `norut.no.` e `ict.norut.no.`, y `fileserver.ict.norut.no. A IP_fileserver`.
+
+## d) fileserver.ht.norut.no.
+Va directo a **dnsp_norut** (en caché) → NS dnsp_ht → dnsp_ht da el A. Se salta la raíz y no.
+
+## e) print.rob.chiba.jp.
+Solo `print.rob.chiba.jp. IN A IP_print` en la zona **rob.chiba.jp**.
+
+## f) correo.soc.chiba.jp para ict.norut.no.
+- En **ict.norut.no**: `ict.norut.no. IN MX 10 correo.soc.chiba.jp.`
+- En **soc.chiba.jp**: `correo.soc.chiba.jp. IN A IP_correo`.
+
+## g) mail.norut.no.
+**Sí.** Un nombre puede ser a la vez dominio y host (como imse.cnm.es en teoría). Se delega con NS (+A del servidor) en norut.no, y el A de mail pasa a la nueva zona.
+
+## h) Secundarios
+1. `cnm.es. NS dnss1.kyoto.jp.` en **es.** y en **cnm.es.**; el A de dnss1 está en kyoto.jp. `norut.no. NS dnss2.norut.no.` + su A (glue) en **no.**, y NS + A en **norut.no.**
+2. www.cnm.es. lo responde **dnsp_cnm o dnss1.kyoto.jp** (sin orden). www.norut.no., **dnsp_norut o dnss2.norut.no**.
+3. Si cae todo bajo cnm.es, www.cnm.es lo sigue respondiendo **dnss1.kyoto.jp**, que está fuera. Lo de norut.no no cambia.
+</script>
+
+<script type="text/markdown" id="enu-4.5">
+```
+www.arcompany.com.             A   150.214.141.23   HTTP
+arcompany.com.                 NS  iron.arcompany.com.           Primario
+iron.arcompany.com.            A   150.210.3.14
+blog.clientes.arcompany.com.   A   200.2.32.24      HTTP
+clientes.arcompany.com.        NS  thor.ARadmin.com.             Primario
+thor.ARadmin.com.              A   100.2.13.34
+clientes.arcompany.com.        MX  spider.clientes.arcompany.com.
+spider.clientes.arcompany.com. A   10.1.14.22       SMTP,POP3
+ventas.arcompany.com.          NS  green.ventas.arcompany.com.   Primario
+green.ventas.arcompany.com.    A   100.23.1.54
+www/marketing/smdoc.ventas…    A   (HTTP, FTP, TFTP)
+empleados.arcompany.com.       NS  hulk.empleados.arcompany.com. Primario
+hulk.empleados.arcompany.com.  A   150.214.24.5
+intra.empleados.arcompany.com. A   150.214.24.8     HTTP
+empleados.arcompany.com.       NS  bat.ARadmin.com.              Secundario
+bat.ARadmin.com.               A   150.214.12.33
+empleados.arcompany.com.       MX  captain… / super…
+super.empleados.arcompany.com. A   120.2.10.58      SMTP,POP3
+ar-ong.org.                    NS  joker.ar-ong.org.             Primario
+```
+Consulta sobre super.empleados.arcompany.com. desde miestación.mired.es. a través de miserver.mired.es.
+</script>
+<script type="text/markdown" id="sol-4.5">
+## a) Jerarquía
+Cada NS marca una zona: arcompany.com (iron), clientes (thor), ventas (green), empleados (hulk + bat secundario) y ar-ong.org (joker). ARadmin.com aparece por thor y bat.
+```
+.
+├─ com
+│  ├─ arcompany (www, iron)
+│  │  ├─ clientes (blog, spider)
+│  │  ├─ ventas (green, www, marketing, smdoc)
+│  │  └─ empleados (hulk, intra, captain, super)
+│  └─ ARadmin (thor, bat)
+└─ org ── ar-ong (joker, www)
+```
+
+## b) Resolución
+1. miestación → miserver (recursiva).
+2. → raíz: `com. NS server_com` + A.
+3. → server_com: `arcompany.com. NS iron` + A 150.210.3.14.
+4. → iron: `empleados NS hulk` y `NS bat` + A 150.214.24.5 y A 150.214.12.33.
+5. → hulk (o bat): `super… A 120.2.10.58` (autoritativa).
+6. → miestación.
+
+## c) Caché
+Solo **miserver**: todas las parejas NS + A de los pasos 2–4 y el A de super.
+
+## d) Todo lo de empleados apagado
+**Sí se resuelve.** El secundario **bat.ARadmin.com** está en otro dominio y sigue respondiendo.
+</script>
+
+<script type="text/markdown" id="enu-4.6">
+Caché del servidor DNS que contestó a maq1.midominio.org. (TTL en segundos; lo que no aparece tiene TTL 700):
+```
+miempresa.fedempes.com.   800 IN NS serverdp.miempresa.fedempes.com.
+fedempes.com.             600 IN NS matrix.dominioA.es.
+fedempes.com.             800 IN NS revol.fedempes.com.
+com.                      900 IN NS cddmahr.com.
+serverdp.miempresa.fedempes.com. 2000 IN A 2.2.2.2
+matrix.dominioA.es.      2000 IN A 45.5.15.150
+revol.fedempes.com.      2000 IN A 32.3.3.3
+cddmahr.com.             1400 IN A 16.40.4.210
+www.miempresa.fedempes.com. 1100 IN A 100.10.10.10
+```
+</script>
+<script type="text/markdown" id="sol-4.6">
+## a)
+**No es autoritativo**: tuvo que recorrer la jerarquía. Su IP **no se puede saber**.
+
+## b)
+El A de **www.miempresa.fedempes.com.**
+
+## c)
+- com.: cddmahr.com.
+- fedempes.com.: revol o matrix (sin el SOA no se sabe cuál es el primario).
+- miempresa.fedempes.com.: serverdp.
+
+## d)
+**No se puede saber**: nadie preguntó por el MX.
+
+## e) t = 100, star.miempresa…
+El NS de miempresa (800) y el A de serverdp (2000) siguen vivos: **2 servidores**, el DNS por defecto y serverdp.
+
+## f)
+Sí: se añade `star.miempresa.fedempes.com. 700 IN A …`.
+
+## g) t = 700, www.fedempes.com.
+El NS de matrix (600) ha caducado, pero el de **revol (800)** sigue vivo con su A: **no hace falta la raíz**.
+
+## h) com apagado
+- **1000 s:** sí, desde la caché (el A de www dura 1100).
+- **1500 s:** no. Han caducado el A de www y todos los NS, y hay que pasar por com, que está apagado.
+</script>
+
+<script type="text/markdown" id="enu-4.7">
+Raíz 1.1.1.1. Los servidores DNS usan 100.0.0.0/8. En todas las zonas excepto teo.atr1.edu, NS con TTL 1000 y el resto con 8000. Zona teo.atr1.edu.:
+```
+teo.atr1.edu. 8000 IN SOA thor.teo.atr1.edu. bruce.teo.atr1.edu. (2019061001 9000 3600 15000 12000)
+teo.atr1.edu.         600  IN NS thor.teo.atr1.edu.
+teo.atr1.edu.         600  IN NS captain.teo.atr1.edu.
+teo.atr1.edu.         900  IN NS spider.support.us.es.
+support.us.es.        1000 IN MX 10 correo.teo.atr1.edu.
+thor.teo.atr1.edu.    2000 IN A 100.2.2.20
+captain.teo.atr1.edu. 2000 IN A 100.1.1.10
+spider.support.us.es. 2000 IN A 100.30.30.30
+dns1.teo.atr1.edu.    1400 IN A 100.20.20.20
+batman.teo.atr1.edu.  2000 IN A 220.50.50.50
+www.teo.atr1.edu.     2500 IN A 150.210.12.7
+correo.teo.atr1.edu.  3000 IN A 120.10.13.7
+server2.teo.atr1.edu. 4500 IN A 140.40.30.7
+```
+PC A, B y C usan como DNS 100.20.20.20, 100.30.30.30 y 220.50.50.50. Al inicio, los secundarios se acaban de actualizar.
+</script>
+<script type="text/markdown" id="sol-4.7">
+## a)
+1. Destino: **bruce@teo.atr1.edu** (del SOA).
+2. **No lo recibe**: teo.atr1.edu **no tiene MX**. El MX que aparece es de support.us.es y además está en una zona que no le corresponde.
+
+## b) Errores
+- Registros de **otra zona** (support.us.es): el MX y el A de spider.
+- **Falta el MX** de teo.atr1.edu (correo.teo.atr1.edu existe, pero nadie apunta a él).
+- TTL distintos dentro del mismo grupo de NS (600 y 900).
+
+## c) Consultas iniciales sobre www
+- **PC A** (100.20.20.20 = dns1.teo.atr1.edu, un DNS porque está en 100/8, pero no es NS de la zona): recibe respuesta **no autoritativa**.
+- **PC B** (100.30.30.30 = spider, secundario recién actualizado): recibe respuesta **autoritativa**.
+- **PC C** (220.50.50.50 = batman, fuera de 100/8, **no es un DNS**): **sin respuesta**.
+
+## d) t = 1500, edu apagado, PC A pregunta server2
+**No se resuelve.** En la caché de dns1, los NS de teo (600/900), atr1.edu (1000) y edu (1000) han caducado, y server2 nunca se preguntó. Hay que empezar por la raíz, que manda a edu, y edu está apagado.
+
+## e) nuevoserver
+PC B pregunta siempre a **spider**, el secundario, que es autoritativo y no usa caché. Spider copia la zona cada **Refresh = 9000 s**: en 9000, 18000 y **27000**. El A se añade en el primario a los 20000, así que PC B lo ve como mínimo a los **27000 s** (suponiendo que se incrementa el serial).
+</script>
+
+<script type="text/markdown" id="enu-4.8">
+Raíz 3.3.3.3. Los servidores DNS usan 40.0.0.0/8 y cada zona tiene al menos dos. Solo los DNS tienen caché. desktop102.tic.migrupo.edu. pregunta www.tecnoatr.com. a **marathon**, de su mismo dominio. Recibe `www.tecnoatr.com. 3000 IN CNAME thessaloniki.tic.nationalcom.gr.` Caché de marathon después:
+```
+tic.nationalcom.gr.  1000 IN NS servertic.tic.nationalcom.gr.
+tic.nationalcom.gr.  2000 IN NS servertic2.tecnoatr.com.
+nationalcom.gr.      1400 IN NS servernat.nationalcom.gr.
+nationalcom.gr.      1600 IN NS servernat2.nationalcom.gr.
+gr.                  1500 IN NS servergr.gr.
+gr.                  2200 IN NS servergr2.gr.
+servertic.tic.nationalcom.gr. 1400 IN A 40.2.2.23
+servernat.nationalcom.gr.     1900 IN A 40.4.4.4
+servernat2.nationalcom.gr.    1300 IN A 40.5.5.5
+servergr.gr.                  2500 IN A 40.20.21.22
+servergr2.gr.                 2500 IN A 120.2.33.4
+thessaloniki.tic.nationalcom.gr.     1700 IN CNAME thserverx-matrix.tic.nationalcom.gr.
+thserverx-matrix.tic.nationalcom.gr. 2300 IN A 100.10.10.10
+```
+Más tarde: `tecnoatr.com. 5000 IN SOA fireb.tecnoatr.com. john.tecnoatr.com. (2020121700 8000 3600 12000 9000)` y `feder.tecnoatr.com. 2000 IN A 203.32.3.12`.
+</script>
+<script type="text/markdown" id="sol-4.8">
+## a)
+**Sí es autoritativo** para tecnoatr.com: no hay nada de com ni de tecnoatr en su caché, así que el CNAME lo sacó de sus propios datos.
+
+## b)
+**No se puede saber**: 40.4.4.4 (servernat) o 40.5.5.5 (servernat2), porque los NS no tienen orden.
+Ojo: **servergr2.gr (120.2.33.4) está fuera de 40.0.0.0/8**, así que no puede ser un servidor DNS (error de configuración).
+
+## c) Resolución
+1. desktop102 → marathon (recursiva).
+2. marathon tiene `www.tecnoatr.com CNAME thessaloniki.tic.nationalcom.gr` (autoritativo) y sigue el alias.
+3. → raíz 3.3.3.3: NS de gr + A.
+4. → servergr (40.20.21.22): NS de nationalcom.gr + A.
+5. → servernat (40.4.4.4): NS de tic.nationalcom.gr (servertic y servertic2) + A.
+6. → servertic (40.2.2.23): `thessaloniki CNAME thserverx-matrix` + `thserverx-matrix A 100.10.10.10`.
+7. marathon → desktop102: el CNAME de www, el CNAME de thessaloniki y el A.
+
+## d) test-server.gr.
+- **Ahora sí**: el NS de gr y el A de servergr están en caché.
+- **A los 1800 s no**: solo queda el NS de servergr2 (2200), que no es un DNS real (IP fuera de 40/8). Hay que volver a la raíz.
+
+## e) t = 1800, gorillaz.tic.nationalcom.gr.
+Queda vivo `tic NS servertic2.tecnoatr.com` (2000), y marathon conoce su IP porque es autoritativo de tecnoatr.com. Intervienen **2 servidores**: marathon y servertic2.tecnoatr.com.
+Caché después (TTL restante): tic NS servertic2 (200), gr NS servergr2 (400), servernat A (100), servergr A y servergr2 A (700), thserverx-matrix A (500) y el nuevo A de gorillaz.
+
+## f) PTR
+`10.10.10.100.in-addr.arpa. IN PTR thserverx-matrix.tic.nationalcom.gr.` en la zona inversa `10.10.100.in-addr.arpa.` (apunta al nombre canónico, no a un alias).
+
+## g) feder cambia de IP
+marathon es autoritativo pero **no es el primario** (el primario es fireb.tecnoatr.com), así que es un **secundario**: se actualiza cada **Refresh = 8000 s**. desktop087 no tiene caché, así que debe esperar como mucho **8000 s**.
+</script>
+
+<script type="text/markdown" id="enu-4.9">
+pokedex.mimundo.edu. pregunta a su DNS por defecto, kanto.ciudades.pk. La respuesta llega en un paquete IP con origen **100.20.1.23** y destino **3.2.3.7**. Pokedex no tiene caché. La caché de kanto estaba vacía y queda así:
+```
+charmander.fuego.pk. 1200 IN A  130.2.45.67
+blaine.fuego.pk.     3000 IN A  9.78.3.4
+katsura.espuma.pk.   3000 IN A  9.5.32.2
+naranja.pk.          3600 IN A  12.3.2.3
+amarillo.pk.         3600 IN A  14.2.5.52
+azul.pk.             3600 IN A  16.6.74.23
+fuego.pk.            5000 IN NS blaine.fuego.pk.
+fuego.pk.            5000 IN NS katsura.espuma.pk.
+pk.                  4400 IN NS naranja.pk. / amarillo.pk. / azul.pk.
+```
+</script>
+<script type="text/markdown" id="sol-4.9">
+## a)
+**charmander.fuego.pk.**
+
+## b)
+1. kanto **no es autoritativo**.
+2. Su IP es **100.20.1.23** (origen del paquete de respuesta).
+3. `23.1.20.100.in-addr.arpa. IN PTR kanto.ciudades.pk.` en la zona inversa de esa red.
+
+## c)
+pokedex → kanto (recursiva) → raíz (NS de pk + A) → naranja.pk (NS de fuego + A) → blaine (A de charmander, autoritativa) → pokedex.
+
+## d)
+**Sí**: `salamandra.espuma.pk. IN CNAME charmander.fuego.pk.` en la zona **pk.** (espuma.pk no está delegado).
+
+## e) charmilion.fuego.pk.
+1. **1500 s, a kanto:** sí, no autoritativa, **2 servidores** (kanto y blaine).
+2. **4000 s, a kanto:** sí, no autoritativa, **4** (kanto, raíz, pk y blaine): los A de los servidores han caducado.
+3. **3.2.3.7:** es pokedex → **sin respuesta**.
+4. **9.78.3.4** (blaine): sí, **autoritativa**, 1 servidor.
+5. **16.6.74.23** (azul, TLD): no acepta recursivas y solo da una referencia → **sin respuesta**.
+
+## f) charmander.fuego.pk.
+1. Cae 9/8 (blaine y katsura): **1200 s** (caché de kanto).
+2. Cae 100/8 (kanto): **0 s**.
+3. Cae 130/8 (charmander): **sin límite**.
+</script>
+
+<script type="text/markdown" id="enu-4.10">
+Zona uxDpto.phipe.i3us.edu. (parte del mapa del primario). Correo: chivatin (prioridad 50) y mserver (prioridad 40). Otro DNS de la zona: serverAux.otrodominio.es. (120.20.2.75). Las IP de los A son todas distintas. El TTL negativo es el mismo en todas las zonas.
+```
+uxDpto.phipe.i3us.edu. IN SOA ucd.uxDpto.phipe.i3us.edu. uxleader.uxDpto.phipe.i3us.edu.
+                       (2021112200 60000 15000 100000 20000)
+virmarathon.uxDpto.phipe.i3us.edu. IN A 190.1.3.32
+www.uxDpto.phipe.i3us.edu.         IN A 180.2.33.2
+```
+maqusu.midominio.es. pregunta www.uxDpto… a servdns.opendomain.uk. y recibe "no se puede resolver" en un paquete con origen **110.10.5.83** y destino **142.22.3.46**. Caché añadida en servdns:
+```
+edu.             1000 IN NS dns-server.edu.
+i3us.edu.        2000 IN NS severA.i3us.edu.
+i3us.edu.        3000 IN NS serverB.i3us.edu.
+phipe.i3us.edu.  5000 IN NS pdns5.phipe.i3us.edu.
+phipe.i3us.edu.  5500 IN NS pdns3.phipe.i3us.edu.
+dns-server.edu.        1500 IN A 100.1.1.1
+serverA.i3us.edu.      2500 IN A 92.3.7.54
+serverB.i3us.edu.      3300 IN A 92.7.3.60
+pdns5.phipe.i3us.edu.  5500 IN A 110.10.3.72
+pdns3.phipe.i3us.edu.  6000 IN A 110.10.5.83
+```
+</script>
+<script type="text/markdown" id="sol-4.10">
+## a) Por qué falla
+La respuesta negativa la da **pdns3.phipe.i3us.edu (110.10.5.83)**. En la caché no hay ningún NS de uxDpto: la zona **phipe.i3us.edu no tiene la delegación** de uxDpto.phipe.i3us.edu, así que responde que no existe.
+**Solución:** añadir en phipe.i3us.edu:
+```
+uxDpto.phipe.i3us.edu.      IN NS ucd.uxDpto.phipe.i3us.edu.
+uxDpto.phipe.i3us.edu.      IN NS serverAux.otrodominio.es.
+ucd.uxDpto.phipe.i3us.edu.  IN A  IP_ucd
+```
+Otro error visible: el NS de i3us.edu apunta a **severA**, pero el A es de **serverA** (errata).
+
+## b) Tiempo de espera
+servdns guarda la respuesta negativa durante el **TTL negativo (Minimum) = 20000 s**.
+
+## c) Con DNS 120.20.2.75
+**Sí cambia**: es **serverAux**, autoritativo de uxDpto, que responde con sus propios datos, así que no hay que esperar (habría respondido incluso antes del arreglo).
+
+## d) t = 5300, www.phipe.i3us.edu → 190.1.3.32
+190.1.3.32 es la IP de virmarathon (las IP no se repiten), así que **www.phipe es un CNAME**. El NS de phipe por pdns3 (5500) y su A (6000) siguen vivos: va directo a pdns3. Caché añadida:
+```
+www.phipe.i3us.edu.               IN CNAME virmarathon.uxDpto.phipe.i3us.edu.
+uxDpto.phipe.i3us.edu.            IN NS ucd.uxDpto.phipe.i3us.edu.
+uxDpto.phipe.i3us.edu.            IN NS serverAux.otrodominio.es.
+ucd.uxDpto.phipe.i3us.edu.        IN A  IP_ucd
+serverAux.otrodominio.es.         IN A  120.20.2.75
+virmarathon.uxDpto.phipe.i3us.edu. IN A 190.1.3.32
+```
+
+## e) Lo que falta en el mapa del primario
+```
+uxDpto.phipe.i3us.edu.  IN NS ucd.uxDpto.phipe.i3us.edu.
+uxDpto.phipe.i3us.edu.  IN NS serverAux.otrodominio.es.
+ucd…                    IN A  IP_ucd
+uxDpto.phipe.i3us.edu.  IN MX 50 chivatin.uxDpto.phipe.i3us.edu.
+uxDpto.phipe.i3us.edu.  IN MX 40 mserver.uxDpto.phipe.i3us.edu.
+chivatin…               IN A  IP_chivatin
+mserver…                IN A  IP_mserver
+```
+</script>
+
+<script type="text/markdown" id="enu-4.11">
+Mapa del primario de enero.examen.atr1.edu. El resto de zonas está bien configurado. Cada dominio tiene un único primario, llamado serverDNS y perteneciente al dominio que gestiona.
+```
+enero.examen.atr1.edu. IN SOA serverd.enero.examen.atr1.edu. admin.enero.examen.atr1.edu.
+                       (2022011300 60000 15000 100000 20000)
+enero.examen.atr1.edu. IN NS serverd. enero.examen.atr1.edu.
+enero.examen.atr1.edu. IN NS dns-server.otrodominio.es.
+serverd. enero.examen.atr1.edu. IN A 129.2.32.3
+prueba.enero.examen.atr1.edu. IN A 190.1.3.32
+www.enero.examen.atr1.edu.    IN A 180.2.33.2
+```
+mipc.midominio.es. pregunta www.enero… a defaultserver.midominio.es (caché vacía). **serverd está parado** por mantenimiento.
+</script>
+<script type="text/markdown" id="sol-4.11">
+## a) Caché de defaultserver
+```
+edu.                      IN NS serverDNS.edu.
+serverDNS.edu.            IN A  IP_serverDNS.edu
+atr1.edu.                 IN NS serverDNS.atr1.edu.
+serverDNS.atr1.edu.       IN A  IP_serverDNS.atr1
+examen.atr1.edu.          IN NS serverDNS.examen.atr1.edu.
+serverDNS.examen.atr1.edu. IN A IP_serverDNS.examen
+enero.examen.atr1.edu.    IN NS serverd.enero.examen.atr1.edu.
+enero.examen.atr1.edu.    IN NS dns-server.otrodominio.es.
+serverd.enero.examen.atr1.edu. IN A 129.2.32.3
+es.                       IN NS serverDNS.es.
+serverDNS.es.             IN A  IP_serverDNS.es
+otrodominio.es.           IN NS serverDNS.otrodominio.es.
+serverDNS.otrodominio.es. IN A  IP_serverDNS.otrodominio
+dns-server.otrodominio.es. IN A IP_dns-server.otrodominio
+www.enero.examen.atr1.edu. IN A 180.2.33.2
+```
+serverd no contesta, así que hay que usar **dns-server.otrodominio.es**. Su IP no viene como glue (está fuera de la zona), así que el servidor la resuelve aparte por la jerarquía de es.
+
+## b) Alias seudo de mail
+**Ahora no.** Los cambios se hacen en el **primario (serverd)**, que está parado; el secundario solo copia. Además, `mail.enero…` no existe (no tiene A). Cuando vuelva serverd:
+```
+mail.enero.examen.atr1.edu.  IN A     IP_mail
+seudo.enero.examen.atr1.edu. IN CNAME mail.enero.examen.atr1.edu.
+```
+
+## c) PTR de 180.2.33.2
+`2.33.2.180.in-addr.arpa. IN PTR www.enero.examen.atr1.edu.` en la zona inversa `33.2.180.in-addr.arpa.`
+
+Error extra del cuadro: `serverd. enero.examen.atr1.edu.` tiene un **espacio**, así que se lee como `serverd.`, otro nombre.
+</script>
+
+<script type="text/markdown" id="enu-4.12">
+Mapa del primario de atr1.asignaturas.ic.edu. Los DNS usan 100.10.0.0/16. domser.otrodominio.es = 100.10.3.2. Las IP de los A no se repiten. NS no mostrados: TTL 4800. Resto: TTL 6000.
+```
+atr1.asignaturas.ic.edu. IN SOA serverp.atr1.asignaturas.ic.edu. cord.atr1.asignaturas.ic.edu.
+                         (2021112200 60000 15000 100000 20000)
+atr1.asignaturas.ic.edu. 4000 IN NS server.atr1.asignaturas.ic.edu.
+atr1.asignaturas.ic.edu. 4000 IN NS domser.otrodominio.es.
+atr1.asignaturas.ic.edu. 3000 IN MX 40 sermail.atr1.asignaturas.ic.edu.
+atr1.asignaturas.ic.edu. 3000 IN MX 15 mdam.otro.dominio.es.
+server.atr1.asignaturas.ic.edu.  5000 IN A 100.10.10.2
+sermail.atr1.asignaturas.ic.edu. 5000 IN A 140.21.2.33
+sftpd.atr1.asignaturas.ic.edu.   5000 IN A 190.1.3.32
+www.atr1.asignaturas.ic.edu.     5000 IN A 180.2.33.2
+```
+maquina.midominio.es. pregunta www.atr1…
+</script>
+<script type="text/markdown" id="sol-4.12">
+## a) Según el DNS por defecto
+1. **140.21.2.33** = sermail, fuera de 100.10/16, así que **no es un DNS**: **sin respuesta**.
+2. **100.10.3.2** = domser, NS de la zona: respuesta **autoritativa**.
+3. **100.10.34.5**: es un DNS (100.10/16), pero no es NS de la zona: respuesta **no autoritativa** (si acepta recursivas).
+
+Incoherencia del cuadro: el SOA nombra como primario a **serverp**, que no aparece en los NS ni tiene A.
+
+## b) Primario apagado
+1. Caché del DNS por defecto (100.10.10.10) tras preguntar sftpd: NS + A de edu., ic.edu. y asignaturas.ic.edu.; los NS de atr1 (server y domser); server A 100.10.10.2; NS + A de es. y otrodominio.es. (para obtener la IP de domser); domser A 100.10.3.2; y `sftpd… A 190.1.3.32`. Responde **domser**.
+2. **4500 s, sermail:** los NS de atr1 (4000) han caducado, pero el NS de asignaturas.ic.edu (4800) y su A siguen vivos. Se pregunta a asignaturas, que remite a atr1. server.atr1 no contesta (apagado) y responde **domser** (su A, 6000, sigue en caché).
+
+## c) PTR de 180.2.33.2
+`2.33.2.180.in-addr.arpa. IN PTR www.atr1.asignaturas.ic.edu.` en la zona `33.2.180.in-addr.arpa.`
+
+## d) Cambio de IP del correo
+El secundario (domser) tarda hasta el **Refresh = 60000 s** en copiar el cambio, y luego las cachés pueden guardar el A viejo su **TTL = 5000 s**. Máximo: **65000 s**.
+Además, el correo se entrega primero a **mdam.otro.dominio.es** (prioridad 15 < 40).
+</script>
 
 <script>
-/* ---------- Banco de preguntas ---------- */
-/* Formato: q(id, tema, enunciado, [opciones, la correcta empieza por *], explicación) */
+/* ================= Datos ================= */
 function q(id,t,text,opts,e){return {id,t,q:text,o:opts.map(s=>s.replace(/^\*/,"")),a:opts.findIndex(s=>s.startsWith("*")),e}}
 const TEMAS={dns:"DNS",ldap:"LDAP",ftp:"TFTP/FTP"};
+const EXAM=new Date(2026,10,9);
 
 const Q=[
 /* DNS */
@@ -212,74 +1298,166 @@ q("f19","ftp","¿Qué es cierto de TFTP?",["*No tiene carpetas ni cifrado","Usa 
 q("f20","ftp","Se sube por TFTP un fichero de 1534 bytes. ¿Cómo es el último DATA?",["*Bloque 3 con 510 bytes","Bloque 3 con 512 bytes","Bloque 4 con 0 bytes","Bloque 2 con 510 bytes"],"1534 = 512 + 512 + 510. Como 510 < 512, es el último.")
 ];
 
-/* ---------- Casos prácticos ---------- */
-const CASOS=[
-{id:"c41",t:"dns",title:"Resolución básica (boletín 4.1)",
- intro:"Un PC (102.73.18.14) quiere entrar en www.informatica.us.es. Su DNS por defecto es 120.20.20.12, que no es autoritativo para ninguna de estas zonas.",
- code:`servidor_dns1.es             DNS   100.100.102.100   gestiona es.
-dns_server1.com              DNS   99.99.99.99       gestiona com.
-onix.us.es                   DNS   150.214.186.69    gestiona us.es.
-dns_info.informatica.us.es   DNS   150.214.7.101     gestiona informatica.us.es.
-dns1.finantial.com           DNS   138.17.117.4      gestiona finantial.com.
-dns_sports.sports.com        DNS   146.10.158.16     gestiona sports.com.
-www.informatica.us.es        HTTP  150.214.115.75`,
- qs:[
-  q("c41a","dns","¿Cuántas zonas DNS hay, contando la raíz?",["*7","6","5","11"],"Una por cada servidor DNS (6) más la raíz."),
-  q("c41b","dns","En el paso 2 el DNS por defecto pregunta a la raíz. ¿Qué responde?",["*es. NS servidor_dns1.es. + su A (100.100.102.100)","La IP de www.informatica.us.es","informatica.us.es. NS dns_info + su A","us.es. NS onix.us.es. + su A"],"La raíz solo conoce los TLD. Da la referencia al siguiente nivel: quién lleva es y dónde está."),
-  q("c41c","dns","¿Qué servidores guardan algo en caché tras la resolución?",["*Solo el DNS por defecto (120.20.20.12)","Todos los consultados","La raíz y el TLD es","Solo dns_info"],"Los demás solo recibieron iterativas y respondieron con sus propios datos."),
-  q("c41d","dns","Se crea fisica.us.es. con su propio DNS. ¿Dónde va la delegación (NS + A)?",["*En la zona us.es. (onix)","En la zona es.","En la zona informatica.us.es.","Solo en la zona fisica.us.es."],"El padre de fisica.us.es es us.es."),
-  q("c41e","dns","¿Dónde van el MX de fisica.us.es y el A de su servidor de correo?",["*Solo en la zona fisica.us.es.","En us.es.","En las dos zonas","En es."],"El padre solo necesita saber a quién delegar. El correo es un dato de la propia zona.")
- ]},
-{id:"c46",t:"dns",title:"Caché con TTL (boletín 4.6)",
- intro:"Caché del servidor DNS que contestó a un cliente de maq1.midominio.org, justo tras resolver la consulta (t = 0). El número es el TTL en segundos. Lo que no aparece tiene TTL 700.",
- code:`miempresa.fedempes.com.   800 IN NS serverdp.miempresa.fedempes.com.
-fedempes.com.             600 IN NS matrix.dominioA.es.
-fedempes.com.             800 IN NS revol.fedempes.com.
-com.                      900 IN NS cddmahr.com.
-serverdp.miempresa.fedempes.com. 2000 IN A 2.2.2.2
-matrix.dominioA.es.      2000 IN A 45.5.15.150
-revol.fedempes.com.      2000 IN A 32.3.3.3
-cddmahr.com.             1400 IN A 16.40.4.210
-www.miempresa.fedempes.com. 1100 IN A 100.10.10.10`,
- qs:[
-  q("c46a","dns","¿Es autoritativo para el dominio consultado el servidor que contestó?",["*No: tuvo que recorrer la jerarquía y guardarlo en caché","Sí: tiene el A de www","Sí: tiene el NS de miempresa","No se puede saber"],"Si fuera el dueño de la zona, respondería con sus datos sin preguntar a nadie."),
-  q("c46b","dns","¿Qué preguntó el cliente?",["*El A de www.miempresa.fedempes.com.","El NS de fedempes.com.","El A de serverdp","El NS de com."],"Es lo que está al final del viaje. Los demás A son de servidores DNS."),
-  q("c46c","dns","¿Cuál es el servidor primario de fedempes.com.?",["*No se puede saber sin el SOA: puede ser revol o matrix","revol, porque está dentro del dominio","matrix, porque aparece primero","cddmahr.com."],"Los NS no tienen orden de prioridad."),
-  q("c46d","dns","¿Se puede saber si fedempes.com. tiene servidor de correo?",["*No: nadie preguntó por el MX","No tiene: no hay MX en caché","Sí, es revol","Sí, es matrix"],"Que no esté en caché no significa que no exista."),
-  q("c46e","dns","A los 100 s se pregunta star.miempresa.fedempes.com. ¿Cuántos servidores DNS intervienen?",["*2: el DNS por defecto y serverdp","4: por defecto, raíz, com y serverdp","3: por defecto, revol y serverdp","1: solo el por defecto"],"El NS de miempresa (800) y el A de serverdp (2000) siguen vivos: va directo."),
-  q("c46f","dns","A los 700 s se pregunta www.fedempes.com. ¿Hace falta pasar por la raíz?",["*No: el NS de revol (800) y su A siguen vivos","Sí: el NS de matrix caducó a los 600","Sí: siempre que cambie el dominio","No: se responde desde la caché"],"Basta con que quede vivo uno de los NS del dominio con su A."),
-  q("c46g","dns","Con los servidores de com apagados, a los 1000 s se pregunta www.miempresa.fedempes.com. ¿Se resuelve?",["*Sí, desde la caché: el A de www dura 1100","No: com está apagado","Sí, preguntando a serverdp","No: el NS de miempresa ha caducado"],"Si la respuesta final sigue en caché, no se pregunta a nadie."),
-  q("c46h","dns","Igual, pero a los 1500 s. ¿Se resuelve?",["*No: han caducado el A de www y todos los NS, y hay que pasar por com, que está apagado","Sí: el A de serverdp sigue vivo","Sí: desde la caché","Sí: preguntando a revol"],"El A de serverdp solo no sirve: sin el NS de miempresa no se sabe que serverdp lleva ese dominio.")
- ]},
-{id:"c49",t:"dns",title:"Pistas en el paquete IP (boletín 4.9)",
- intro:"pokedex.mimundo.edu. pregunta a su DNS por defecto, kanto.ciudades.pk. La respuesta llega en un paquete IP con origen 100.20.1.23 y destino 3.2.3.7. La caché de kanto estaba vacía y queda así (t = 0):",
- code:`charmander.fuego.pk. 1200 IN A  130.2.45.67
-blaine.fuego.pk.     3000 IN A  9.78.3.4
-katsura.espuma.pk.   3000 IN A  9.5.32.2
-naranja.pk.          3600 IN A  12.3.2.3
-amarillo.pk.         3600 IN A  14.2.5.52
-azul.pk.             3600 IN A  16.6.74.23
-fuego.pk.            5000 IN NS blaine.fuego.pk.
-fuego.pk.            5000 IN NS katsura.espuma.pk.
-pk.                  4400 IN NS naranja.pk.
-pk.                  4400 IN NS amarillo.pk.
-pk.                  4400 IN NS azul.pk.`,
- qs:[
-  q("c49a","dns","¿Qué FQDN se consultó?",["*charmander.fuego.pk.","blaine.fuego.pk.","fuego.pk.","kanto.ciudades.pk."],"Es el único A que no pertenece a un servidor DNS."),
-  q("c49b","dns","¿Cuál es la IP de kanto?",["*100.20.1.23","3.2.3.7","9.78.3.4","No se puede saber"],"La respuesta va del servidor al cliente: el origen es kanto y el destino es pokedex."),
-  q("c49c","dns","¿Qué registro permite obtener el nombre de kanto a partir de su IP?",["*23.1.20.100.in-addr.arpa. IN PTR kanto.ciudades.pk.","100.20.1.23.in-addr.arpa. IN PTR kanto.ciudades.pk.","kanto.ciudades.pk. IN PTR 100.20.1.23","23.1.20.100.in-addr.arpa. IN A kanto.ciudades.pk."],"PTR en la zona inversa, con la IP escrita al revés."),
-  q("c49d","dns","¿Se puede crear el alias salamandra.espuma.pk. de charmander.fuego.pk.?",["*Sí: un CNAME en la zona pk., porque espuma.pk no está delegado","Sí: un CNAME en la zona fuego.pk.","No: el alias debe estar en el mismo dominio que el original","Sí: un A en la zona fuego.pk."],"El CNAME va en la zona del alias. No hay NS de espuma, así que esa zona es pk."),
-  q("c49e","dns","A los 1500 s se pregunta charmilion.fuego.pk. desde pokedex. ¿Cuántos servidores DNS intervienen?",["*2: kanto y blaine (o katsura)","4: kanto, raíz, pk y blaine","1: solo kanto","3: kanto, pk y blaine"],"Siguen vivos el NS de fuego (5000) y el A de blaine (3000)."),
-  q("c49f","dns","A los 4000 s, una estación con DNS 100.20.1.23 pregunta charmilion.fuego.pk. ¿Qué pasa?",["*Se resuelve, sin ser autoritativa, con 4 servidores: kanto, raíz, uno de pk y blaine","Se resuelve con 2 servidores, porque el NS de fuego está vivo","No se resuelve: la caché ha caducado","Se resuelve de forma autoritativa"],"El NS de fuego vive, pero los A de blaine y katsura (3000) y los de pk (3600) han caducado. Sin IPs no hay a quién preguntar: se empieza por la raíz."),
-  q("c49g","dns","A los 3000 s, una estación con DNS 3.2.3.7 pregunta charmilion.fuego.pk. ¿Qué pasa?",["*No hay respuesta: 3.2.3.7 es pokedex, un cliente","Se resuelve desde la caché de pokedex","Se resuelve con 2 servidores","Se resuelve de forma autoritativa"],"3.2.3.7 era el destino del paquete, es decir, el cliente. El enunciado dice que no tiene caché."),
-  q("c49h","dns","A los 6000 s, una estación con DNS 9.78.3.4 pregunta charmilion.fuego.pk. ¿Qué pasa?",["*Se resuelve de forma autoritativa, con 1 servidor","No se resuelve: la caché ha caducado","Se resuelve con 4 servidores","No hay respuesta"],"9.78.3.4 es blaine, que gestiona fuego.pk. La caché le da igual."),
-  q("c49i","dns","A los 3800 s, una estación con DNS 16.6.74.23 pregunta charmilion.fuego.pk. ¿Qué pasa?",["*No obtiene la IP: azul.pk es un TLD, no acepta recursivas y solo da una referencia","Se resuelve de forma autoritativa","Se resuelve con 2 servidores","Se resuelve desde caché"],"Los servidores de la jerarquía (raíz y TLD) no suelen aceptar recursivas."),
-  q("c49j","dns","Recién resuelta la consulta, se apagan todos los servidores de 9.0.0.0/8. ¿Durante cuánto tiempo puede pokedex resolver charmander.fuego.pk.?",["*1200 s","0 s","3000 s","Sin límite"],"Caen blaine y katsura, todos los DNS de fuego. Solo queda la caché de kanto, mientras dure el A de charmander."),
-  q("c49k","dns","Se apagan todos los servidores de 100.0.0.0/8. ¿Durante cuánto tiempo puede pokedex resolver charmander?",["*0 s","1200 s","4400 s","Sin límite"],"Cae kanto, su DNS por defecto, y pokedex no tiene caché."),
-  q("c49l","dns","Se apagan todos los servidores de 130.0.0.0/8. ¿Durante cuánto tiempo puede pokedex resolver charmander?",["*Sin límite","1200 s","0 s","5000 s"],"Solo cae el propio charmander. Su IP sigue estando en blaine y katsura.")
- ]},
+/* Boletín: enunciado y solución vienen de los bloques markdown enu-X y sol-X */
+const BOL=[
+{id:"2.1",t:"ldap",title:"Listín telefónico",d:4,qs:[
+ q("b21a","ldap","¿Por qué no basta el nombre y apellidos como RDN de una entrada del listín?",["*Dos personas pueden llamarse igual y serían hermanas con el mismo RDN","Porque cn no existe en LDAP","Porque el RDN debe ser numérico","Porque cn es un atributo operacional"],"El RDN debe ser único entre hermanos, y el enunciado avisa de que hay homónimos."),
+ q("b21b","ldap","¿Qué RDN usarías para una entrada de teléfono del corporativo?",["*givenName=Octavio+sn=Rivera+tel=954552789","tel=954552789","sn=Rivera","givenName=Octavio+sn=Rivera"],"El teléfono solo no sirve (se comparte) y el nombre solo tampoco (homónimos). La combinación sí."),
+ q("b21c","ldap","¿Cuál es el DN de Octavio Rivera (954552789) en el corporativo?",["*givenName=Octavio+sn=Rivera+tel=954552789, ou=corporativo, dc=us, dc=es","dc=es, dc=us, ou=corporativo, givenName=Octavio+sn=Rivera+tel=954552789","tel=954552789, ou=corporativo, dc=us, dc=es","givenName=Octavio, sn=Rivera, tel=954552789, dc=us, dc=es"],"Se escribe desde la entrada hasta la raíz, y los atributos del RDN multivaluado van unidos con +."),
+ q("b21d","ldap","¿Cómo consigues que cada trabajador tenga su propio listín?",["*Un nodo por trabajador (p. ej. uid=…) bajo ou=personal, con sus contactos colgando de él","Un atributo listín multivaluado en el corporativo","Un DSA por trabajador obligatoriamente","Poniendo los contactos en el corporativo con otro objectClass"],"Cada trabajador es un subárbol, así que sus contactos no chocan con los de otros.")]},
+{id:"2.2",t:"ldap",title:"Records de atletismo",d:4,qs:[
+ q("b22a","ldap","¿Permite este DIT guardar un histórico de los records de cada prueba?",["*No: el RDN es prueba+cat, así que solo cabe una entrada por prueba y categoría","Sí, añadiendo entradas con el mismo RDN","Sí, porque fecha es un atributo","No, porque LDAP no guarda fechas"],"Para un histórico habría que meter la fecha en el RDN o añadir un nivel."),
+ q("b22b","ldap","¿Puede un record estar compartido por dos atletas?",["*Sí, si el atributo atleta es multivaluado","No, el RDN no lo permite","Solo creando dos entradas con el mismo RDN","No, porque atleta forma parte del DN"],"El atleta no está en el RDN: basta con que la entrada tenga dos valores de atleta."),
+ q("b22c","ldap","¿Qué es “Carreras”?",["*Una unidad organizativa (ou) que agrupa las pruebas de carreras","Una entrada de la clase record","Un atributo","Un alias"],"Igual que Saltos y Lanzamientos."),
+ q("b22d","ldap","Bruno Hortelano tiene el record de 100, 200 y 400 m. ¿Cuántas hojas hay que consultar como mínimo?",["*3","1","6","2"],"Una entrada por prueba: 100m, 200m y 400m (cat=Masculino), bajo OU=Carreras.")]},
+{id:"2.3",t:"ldap",title:"Investigadores PAIDI",d:5,qs:[
+ q("b23a","ldap","¿Qué profundidad mínima tiene el DIT, con la raíz como nivel 1?",["*4","6","5","3"],"Como mínimo, el dominio dc=paidi,dc=andalucia,dc=es es un solo nodo: raíz, ou=Investigador, ou=Informática y la entrada. Si cada dc fuera un nodo, serían 6."),
+ q("b23b","ldap","¿Se puede crear una entrada para Octavio Rivera en Medicina?",["*Sí: cuelga de otro padre (ou=Medicina), así que su RDN no choca","No: ya existe sn=Rivera+givenName=Octavio","Solo con otro objectClass","No: el DN sería el mismo"],"El RDN solo tiene que ser único entre hermanos."),
+ q("b23c","ldap","¿Qué tipo de objeto es “Informática”?",["*organizationalUnit","person","inetOrgPerson","alias"],"Es un ou que agrupa investigadores."),
+ q("b23d","ldap","Llega un referral con 130.23.2.45 al consultar a Octavio Rivera. ¿Qué significa?",["*El servidor no tiene esa entrada y remite al cliente a otro servidor LDAP (130.23.2.45) que puede tenerla","Es la IP del investigador","Es un error de permisos","El cliente debe repetir la consulta en el mismo servidor"],"El cliente tiene que contactar con ese servidor si quiere completar la operación.")]},
+{id:"2.4",t:"ldap",title:"Departamentos US",d:5,qs:[
+ q("b24a","ldap","¿Qué cuelga directamente del nodo del dominio (dc=us,dc=es)?",["*ou=Informática y ou=Psicología","Los cinco profesores","Las áreas (Tecnología Electrónica…)","dc=Informática"],"Después vienen las áreas y, debajo, los profesores."),
+ q("b24b","ldap","¿Dónde guardarías la URL de la ETSI Informática?",["*En la entrada ou=Informática, con un atributo de URL (p. ej. labeledURI) que permita su clase","En cada profesor","En el nodo dc=us,dc=es","No se puede guardar en LDAP"],"Si organizationalUnit no admite ese atributo, se añade una clase auxiliar o se extiende el esquema."),
+ q("b24c","ldap","¿Se puede añadir a Oscar Rivera, de Tecnología Electrónica, con mail orivera@us.es?",["*No: su RDN sería sn=Rivera+mail=orivera@us.es, igual al de Octavio, su hermano","Sí: tiene distinto nombre","Sí: el cn es distinto","No: no puede haber dos Rivera en el DIT"],"El nombre no forma parte del RDN, así que chocan."),
+ q("b24d","ldap","Llegan dos entradas de Sivianes, creadas por AdminETSII y por AdminEPS. ¿Cuántos DSA como mínimo?",["*2","1","3","4"],"Hay un subárbol por escuela, y cada entrada viene de uno distinto."),
+ q("b24e","ldap","¿Qué tipo de atributo es creatorsName?",["*Operacional","De usuario","Una clase de objeto","Parte del RDN"],"Lo gestiona el servidor y no se devuelve salvo que se pida.")]},
+{id:"2.5",t:"ldap",title:"Deportistas FE",d:3,qs:[
+ q("b25a","ldap","¿Qué cuelga directamente de dc=fe,dc=es?",["*ou=Deportista y ou=Entrenador","Los deportes","Las personas","ou=Atletismo"],"Luego los deportes (ou) y, debajo, las personas (cn)."),
+ q("b25b","ldap","¿Qué clase tienen “Baloncesto” y “Rafael Nadal”?",["*organizationalUnit y una clase de persona (p. ej. inetOrgPerson)","Las dos organizationalUnit","Las dos inetOrgPerson","alias y persona"],"Baloncesto agrupa; Nadal es una persona."),
+ q("b25c","ldap","¿Se puede añadir un atleta llamado Marco Rufo?",["*Sí: colgaría de ou=Atletismo,ou=Deportista, un padre distinto al del entrenador","No: ya existe cn=Marco Rufo","Solo cambiando el cn","No: el DN sería el mismo"],"Mismo RDN con padre distinto da un DN distinto.")]},
+{id:"2.6",t:"ldap",title:"Directorio de empresa.com",d:3,qs:[
+ q("b26a","ldap","¿Dónde colocas al equipo directivo?",["*En su propia ou (p. ej. ou=Dirección) o colgando directamente del dominio","Dentro de Investigación","En los tres departamentos","No se puede representar"],"El enunciado dice que no pertenece a ningún departamento."),
+ q("b26b","ldap","¿Qué clase usarías para los empleados?",["*inetOrgPerson (cn, sn, telephoneNumber, mail, postalAddress)","organizationalUnit","dcObject","alias"],"Tiene todos los atributos que piden."),
+ q("b26c","ldap","Hay un Luis Expósito en Investigación y otro en Administración. ¿Qué RDN tienen?",["*Los dos cn=Luis Expósito: sus padres son distintos","Hay que usar cn=Luis Expósito+ou=…","No se pueden dar de alta","Solo uno puede existir"],"Sus DN son distintos porque cuelgan de ou distintas.")]},
+{id:"2.7",t:"ldap",title:"Animales de compañía",d:5,qs:[
+ q("b27a","ldap","¿Qué atributo usarías como RDN de un animal?",["*Su número identificativo","Su nombre","Su tipo","Su estado"],"Es lo único que no se repite."),
+ q("b27b","ldap","¿Qué estructura tiene el DIT?",["*Dominio → 8 delegaciones (ou) → asociaciones (ou) → animales","Dominio → animales → asociaciones","Dominio → tipos de animal → delegaciones","Todo en un nivel"],"Sigue la organización real de la confederación."),
+ q("b27c","ldap","¿Puede una persona ser dueña o madrina de varios perros?",["*Sí: guardando a las personas como entradas propias y referenciándolas desde cada animal (o repitiendo sus datos)","No: cada persona solo puede aparecer una vez en el DIT","No: el RDN lo impide","Solo si los perros están en la misma asociación"],"Un atributo responsable con el DN de la persona permite reutilizarla.")]},
+{id:"2.8",t:"ldap",title:"Asignaturas y profesores",d:5,qs:[
+ q("b28a","ldap","¿Qué RDN usarías para un profesor?",["*uid (un identificador único): puede haber dos con el mismo nombre en el mismo departamento","cn=Nombre Apellidos","mail, siempre obligatorio","sn"],"Con cn chocarían los homónimos del mismo departamento."),
+ q("b28b","ldap","¿Cómo indicas que una asignatura la imparten varios profesores?",["*Con un atributo multivaluado en la asignatura que guarde el DN de cada profesor","Duplicando la asignatura bajo cada profesor","Con un alias por profesor","No se puede"],"Así no se repite la asignatura."),
+ q("b28c","ldap","¿Dónde cuelgan asignaturas y profesores?",["*Bajo su departamento (p. ej. ou=Profesores y ou=Asignaturas dentro de cada departamento)","Todos en la raíz","Asignaturas bajo cada profesor","Profesores bajo cada asignatura"],"Asignatura y profesor comparten departamento."),
+ q("b28d","ldap","¿Cómo añadirías una valoración de dificultad y otra del profesor?",["*Con nuevos atributos opcionales en sus clases (o una clase auxiliar)","Creando un DSA nuevo","Con atributos operacionales","Metiéndolas en el RDN"],"Se extiende el esquema.")]},
+{id:"3.1",t:"ftp",title:"Enviar prueba.txt (1024 B)",d:2,qs:[
+ q("b31a","ftp","¿Cuál es el primer mensaje?",["*WRQ (02) con prueba.txt y modo netascii","RRQ (01) con prueba.txt","DATA con bloque 1","ACK con bloque 0"],"Mandar al servidor es escribir. Es un .txt, así que netascii."),
+ q("b31b","ftp","¿Qué responde el servidor si acepta?",["*ACK con bloque 0","DATA con bloque 1","ACK con bloque 1","WRQ"],"El ACK 0 es el permiso para escribir."),
+ q("b31c","ftp","¿Cuántos DATA se envían?",["*3 (512, 512 y 0 bytes)","2","1","4"],"1024 es múltiplo de 512: hace falta un DATA final vacío."),
+ q("b31d","ftp","¿Cuántos mensajes hay en total?",["*8: WRQ, ACK 0, 3 DATA y 3 ACK","6","7","9"],"Escritura: WRQ + ACK 0 + N DATA + N ACK.")]},
+{id:"3.2",t:"ftp",title:"Cronograma TFTP con errores",d:4,qs:[
+ q("b32a","ftp","¿Qué falla al principio del cronograma?",["*TFTP usa UDP: no hay establecimiento de conexión TCP","Falta un SYN","El RRQ debe ir al puerto 21","Nada"],"TFTP va sobre UDP, puerto 69."),
+ q("b32b","ftp","¿Qué debería responder el servidor al RRQ prueba.txt?",["*DATA 1 directamente, no un ACK","Lo dibujado es correcto","ACK 1","WRQ"],"A un RRQ se responde con datos."),
+ q("b32c","ftp","¿Qué falta tras el DATA de prueba.txt (230 B)?",["*El ACK 1 del cliente","Un DATA 2 de 0 bytes","Nada","Un ERROR"],"Todo DATA se confirma. Como 230 < 512, no hay más bloques."),
+ q("b32d","ftp","¿Qué falta en el envío de fichero1.txt (1024 B)?",["*Un DATA 3 de 0 bytes y su ACK 3","Sobra el DATA 2","Nada","Un ACK 0 extra"],"1024 es múltiplo de 512."),
+ q("b32e","ftp","¿Qué debería pasar con el RRQ test1.jpg?",["*El servidor no tiene test1.jpg: debe responder ERROR código 1 (File not found)","Lo dibujado es correcto","Debe responder ACK 0","Debe responder ERROR código 6"],"El servidor solo tiene prueba.txt, test.txt y foto.jpg."),
+ q("b32f","ftp","¿Qué está mal en el WRQ foto.jpg?",["*Lo envía el servidor: las peticiones las hace siempre el cliente (que además no tiene foto.jpg)","Le falta el DATA 1","Debería ser un RRQ del servidor","Nada"],"Si el cliente intentara escribirla, recibiría ERROR 6: el servidor ya la tiene.")]},
+{id:"3.3",t:"ftp",title:"Subir apuntesRC.txt (1534 B)",d:2,qs:[
+ q("b33a","ftp","¿Qué transporte y puerto usa?",["*UDP, puerto 69","TCP, puerto 21","TCP, puerto 69","UDP, puerto 53"],"TFTP siempre va sobre UDP 69."),
+ q("b33b","ftp","¿Cuál es el primer mensaje?",["*WRQ con apuntesRC.txt y modo netascii","RRQ con modo octet","WRQ con modo octet","DATA 1"],"Guardar en el servidor es escribir, y es un fichero de texto."),
+ q("b33c","ftp","¿Cuál es el último DATA?",["*El bloque 3, con 510 bytes","El bloque 3, con 512 bytes","El bloque 4, con 0 bytes","El bloque 2, con 510 bytes"],"1534 = 512 + 512 + 510, y 510 < 512 marca el final.")]},
+{id:"4.1",t:"dns",title:"Resolución básica",d:3,qs:[
+ q("c41a","dns","¿Cuántas zonas DNS hay, contando la raíz?",["*7","6","5","11"],"Una por cada servidor DNS (6) más la raíz."),
+ q("c41b","dns","En el paso 2, el DNS por defecto pregunta a la raíz. ¿Qué responde?",["*es. NS servidor_dns1.es. + su A (100.100.102.100)","La IP de www.informatica.us.es","informatica.us.es. NS dns_info + su A","us.es. NS onix.us.es. + su A"],"La raíz solo conoce los TLD."),
+ q("c41c","dns","¿Qué servidores guardan algo en caché tras la resolución?",["*Solo el DNS por defecto (120.20.20.12)","Todos los consultados","La raíz y el TLD es","Solo dns_info"],"Los demás solo recibieron iterativas."),
+ q("c41d","dns","Se crea fisica.us.es. con su propio DNS. ¿Dónde va la delegación (NS + A)?",["*En la zona us.es. (onix)","En la zona es.","En informatica.us.es.","Solo en fisica.us.es."],"El padre de fisica.us.es es us.es."),
+ q("c41e","dns","¿Dónde van el MX de fisica.us.es y el A de su servidor de correo?",["*Solo en la zona fisica.us.es.","En us.es.","En las dos zonas","En es."],"El padre solo necesita saber a quién delegar.")]},
+{id:"4.2",t:"dns",title:"Zonas bajo com y pila",d:5,qs:[
+ q("b42a","dns","¿Es docsis2.finantial.com una zona aparte?",["*No: no tiene servidor DNS; sus datos están en la zona finantial.com","Sí","Sí, gestionada por dns_doc","Sí, gestionada por la raíz"],"Solo hay zona nueva donde hay un servidor DNS."),
+ q("b42b","dns","¿Cuántas zonas hay bajo com, incluyendo com?",["*4: com, finantial.com, docsis.finantial.com y ojm.com","5 (contando docsis2)","3","6"],"docsis2 va dentro de finantial.com."),
+ q("b42c","dns","¿Qué guarda el primario de org sobre labcom.org?",["*labcom.org. NS server_labcom.labcom.org. y su A 10.0.12.4","El A de coco","Toda la zona labcom","Nada"],"Solo la delegación. El DNS no tiene nombre, así que se le llama server_labcom."),
+ q("b42d","dns","Se añade arquitectura.europa.es. ¿Dónde va la delegación?",["*En la zona europa.es. (dns_eur): NS dns_ar + A 10.0.200.12","En la zona es.","Solo en arquitectura.europa.es.","En europa.es. junto al MX del correo"],"El MX y el A del correo van en la zona nueva."),
+ q("b42e","dns","Haile pregunta por www.informatica.us.es. ¿Qué referencia da la raíz?",["*es. NS server_es + su A","us.es. NS server_us","informatica.us.es. NS dns_info","com. NS server_com"],"Haile está bajo com, pero lo que manda es el nombre preguntado."),
+ q("b42f","dns","¿Qué pila usa Haile al preguntar a su DNS y cómo se le identifica?",["*DNS/UDP/IP/Ethernet: puerto origen UDP, IP origen y MAC origen","DNS/TCP/IP: solo por el puerto 53","HTTP/TCP/IP","DNS/UDP/IP: solo por la IP"],"El puerto destino es el 53; el de origen identifica al cliente.")]},
+{id:"4.3",t:"dns",title:"Jerarquía eu/asia",d:5,qs:[
+ q("b43a","dns","¿Cuántos servidores DNS primarios hay (uno por óvalo)?",["*12 (11 dominios + la raíz)","11","21","2"],"raíz, eu, asia, spain, france, rusia, china, granada, sevilla, paris, pekin y motril."),
+ q("b43b","dns","¿Cuántos servidores TLD hay?",["*2: eu y asia","4","1","12"],"Son los que cuelgan directamente de la raíz."),
+ q("b43c","dns","¿Cuál es el FQDN del DNS por defecto?",["*dnsp_default.otrodominio.down.org.","dnsp_default.org.","dnsp_default.down.org.","pc12.otrodominio.down.org."],"Está en el mismo dominio que pc12."),
+ q("b43d","dns","¿Qué guarda dnsp_default tras resolver correo.rusia.asia.?",["*NS + A de asia y de rusia.asia, y el A de correo","Solo el A de correo","NS de eu y de asia","Nada"],"Las parejas de cada referencia más la respuesta."),
+ q("b43e","dns","Después, una consulta sobre www.pekin.china.asia. ¿Por dónde empieza?",["*Por dnsp_asia (en caché): asia → china → pekin","Por la raíz","Directo a dnsp_pekin","Responde desde la caché"],"El NS de asia sigue vivo."),
+ q("b43f","dns","Se añade fcd.paris.france.eu. con su propio DNS. ¿Dónde va la delegación?",["*En la zona paris.france.eu (dnsp_paris): NS dnsp_fcd + A","En france.eu","En eu","No se puede, porque paris ya es un host"],"El padre de fcd es paris.france.eu.")]},
+{id:"4.4",t:"dns",title:"Zonas es/no/jp y secundarios",d:6,qs:[
+ q("b44a","dns","¿Qué zonas faltan en la tabla para que la jerarquía exista?",["*cnm.es, norut.no y chiba.jp (los padres de las de segundo nivel), además de la raíz y los TLD","Ninguna","Solo los TLD","imse.es"],"Sin ellas nadie podría delegar imse, ict, ht, rob ni soc."),
+ q("b44b","dns","¿En qué orden se resuelve fileserver.ict.norut.no.?",["*raíz → dnsp_no → dnsp_norut → dnsp_ict","raíz → dnsp_norut → dnsp_ict","dnsp_no → dnsp_ict","raíz → dnsp_ict"],"Un nivel en cada paso."),
+ q("b44c","dns","Después, fileserver.ht.norut.no. ¿Por dónde empieza?",["*Directo a dnsp_norut (en caché) y luego dnsp_ht","Por la raíz","Directo a dnsp_ht","Responde desde la caché"],"Se aprovecha el NS de norut que quedó en caché."),
+ q("b44d","dns","¿Qué hay que añadir para print.rob.chiba.jp.?",["*Solo un A en la zona rob.chiba.jp","NS + A en chiba.jp","Un A en chiba.jp","Un MX en rob.chiba.jp"],"Es un host nuevo en una zona que ya existe."),
+ q("b44e","dns","correo.soc.chiba.jp. dará correo a ict.norut.no. ¿Qué se añade?",["*Un MX en ict.norut.no (apuntando a correo.soc.chiba.jp) y el A de correo en soc.chiba.jp","Todo en soc.chiba.jp","Solo un MX en soc.chiba.jp","Un A en ict.norut.no"],"El MX va en el dominio que recibe el correo, y el A en la zona del servidor."),
+ q("b44f","dns","¿Se puede crear el dominio mail.norut.no.?",["*Sí: un nombre puede ser dominio y host a la vez (como imse.cnm.es); se delega con NS (+A) en norut.no","No: ya existe el host mail","No: mail es una palabra reservada","Solo si se borra norut.no"],"El A de mail pasaría a la nueva zona."),
+ q("b44g","dns","Se instala dnss1.kyoto.jp. como secundario de cnm.es. ¿Qué se añade?",["*cnm.es. NS dnss1.kyoto.jp. en es. y en cnm.es. (el A de dnss1 está en kyoto.jp)","Solo un A en cnm.es","Un CNAME","Nada en es."],"Como está fuera del dominio, no hace falta glue."),
+ q("b44h","dns","Caen todos los servidores bajo cnm.es. ¿Quién responde www.cnm.es.?",["*dnss1.kyoto.jp","Nadie","dnsp_es","dnss2.norut.no"],"Por eso conviene que los secundarios estén fuera del dominio.")]},
+{id:"4.5",t:"dns",title:"arcompany y su secundario",d:4.5,qs:[
+ q("b45a","dns","¿Cuántas zonas hay bajo arcompany.com, incluyéndola?",["*4: arcompany, clientes, ventas y empleados","3","5","2"],"Cada NS marca una zona."),
+ q("b45b","dns","¿En qué zona está www.ventas.arcompany.com.?",["*ventas.arcompany.com (green)","arcompany.com (iron)","clientes.arcompany.com","ARadmin.com"],"ventas tiene su propio NS."),
+ q("b45c","dns","En el paso 4, ¿qué responde iron?",["*NS de empleados (hulk y bat) con sus A","El A de super","El NS de ventas","El MX de empleados"],"iron es el padre de empleados y da la referencia."),
+ q("b45d","dns","¿Quién guarda caché tras resolver super?",["*Solo miserver.mired.es","Todos","iron y hulk","Nadie"],"Es el único que recibió una recursiva."),
+ q("b45e","dns","Se apaga todo lo que hay bajo empleados.arcompany.com. ¿Se resuelve super?",["*Sí: bat.ARadmin.com (secundario, en otro dominio) sigue encendido","No","Sí, desde la caché de iron","Solo si super está encendido"],"Que el host esté apagado no importa: la IP está en el DNS.")]},
+{id:"4.6",t:"dns",title:"Caché con TTL",d:6.5,qs:[
+ q("c46a","dns","¿Es autoritativo para el dominio consultado el servidor que contestó?",["*No: tuvo que recorrer la jerarquía y guardarlo en caché","Sí: tiene el A de www","Sí: tiene el NS de miempresa","No se puede saber"],"Si fuera el dueño, respondería con sus datos."),
+ q("c46b","dns","¿Qué preguntó el cliente?",["*El A de www.miempresa.fedempes.com.","El NS de fedempes.com.","El A de serverdp","El NS de com."],"El resto de A son de servidores DNS."),
+ q("c46c","dns","¿Cuál es el primario de fedempes.com.?",["*No se puede saber sin el SOA: revol o matrix","revol, porque está dentro del dominio","matrix, porque aparece primero","cddmahr.com."],"Los NS no tienen orden."),
+ q("c46d","dns","¿Se puede saber si fedempes.com. tiene servidor de correo?",["*No: nadie preguntó por el MX","No tiene: no hay MX en caché","Sí, es revol","Sí, es matrix"],"Que no esté en caché no significa que no exista."),
+ q("c46e","dns","A los 100 s se pregunta star.miempresa.fedempes.com. ¿Cuántos servidores DNS intervienen?",["*2: el DNS por defecto y serverdp","4: por defecto, raíz, com y serverdp","3: por defecto, revol y serverdp","1: solo el por defecto"],"El NS de miempresa (800) y el A de serverdp (2000) siguen vivos."),
+ q("c46f","dns","A los 700 s se pregunta www.fedempes.com. ¿Hace falta pasar por la raíz?",["*No: el NS de revol (800) y su A siguen vivos","Sí: el NS de matrix caducó a los 600","Sí: siempre que cambie el dominio","No: se responde desde la caché"],"Basta con que quede vivo uno de los NS con su A."),
+ q("c46g","dns","Con com apagado, a los 1000 s se pregunta www.miempresa.fedempes.com. ¿Se resuelve?",["*Sí, desde la caché: el A de www dura 1100","No: com está apagado","Sí, preguntando a serverdp","No: el NS de miempresa ha caducado"],"Si la respuesta final sigue viva, no se pregunta a nadie."),
+ q("c46h","dns","Igual, pero a los 1500 s. ¿Se resuelve?",["*No: han caducado el A de www y todos los NS, y hay que pasar por com, que está apagado","Sí: el A de serverdp sigue vivo","Sí: desde la caché","Sí: preguntando a revol"],"Un A sin su NS no sirve.")]},
+{id:"4.7",t:"dns",title:"Errores en teo.atr1.edu",d:8,qs:[
+ q("b47a","dns","Se escribe al administrador de teo.atr1.edu. ¿A qué dirección?",["*bruce@teo.atr1.edu","thor@teo.atr1.edu","admin@atr1.edu","correo@teo.atr1.edu"],"Segundo campo del SOA, con el primer punto convertido en @."),
+ q("b47b","dns","¿Recibirá el correo?",["*No: teo.atr1.edu no tiene MX; el que aparece es de support.us.es y está en la zona equivocada","Sí, en correo.teo.atr1.edu","Sí, en thor","Sí, en spider"],"Hace falta un MX de teo.atr1.edu apuntando a correo."),
+ q("b47c","dns","¿Cuál es un error de la zona?",["*Incluye registros de otra zona (MX y A de support.us.es)","El serial es antiguo","Tiene tres NS","Los A tienen TTL distintos"],"Una zona solo debe tener datos de su propio dominio (y glue de lo que delega)."),
+ q("b47d","dns","PC A (DNS 100.20.20.20) pregunta www al inicio. ¿Qué pasa?",["*Recibe respuesta no autoritativa: dns1 es un DNS (100/8), pero no es NS de la zona","Recibe respuesta autoritativa","No recibe respuesta","Recibe un error"],"dns1 recorre la jerarquía como cualquier DNS por defecto."),
+ q("b47e","dns","PC B (DNS 100.30.30.30) pregunta www al inicio. ¿Qué pasa?",["*Recibe respuesta autoritativa: es spider.support.us.es, secundario de la zona","Recibe respuesta no autoritativa","No recibe respuesta","Recibe un error"],"El secundario se acaba de actualizar y responde con sus datos."),
+ q("b47f","dns","PC C (DNS 220.50.50.50) pregunta www al inicio. ¿Qué pasa?",["*No recibe respuesta: es batman, fuera de 100/8, así que no es un DNS","Recibe respuesta autoritativa","Recibe respuesta no autoritativa","Responde desde caché"],"Los DNS están todos en 100.0.0.0/8."),
+ q("b47g","dns","t = 1500, edu apagado. PC A pregunta server2. ¿Se resuelve?",["*No: todos los NS en caché (TTL ≤ 1000) han caducado y hay que pasar por edu","Sí, desde la caché","Sí: dns1 pregunta directamente a thor","Sí: a spider"],"server2 nunca se había preguntado."),
+ q("b47h","dns","¿En qué instante, como mínimo, conecta PC B con nuevoserver?",["*27000 s","20000 s","29000 s","32000 s"],"PC B pregunta a spider (secundario, sin caché), que copia la zona cada 9000 s: 9000, 18000 y 27000. El A se añade a los 20000.")]},
+{id:"4.8",t:"dns",title:"CNAME y marathon",d:8,qs:[
+ q("b48a","dns","¿Es marathon autoritativo para tecnoatr.com?",["*Sí: no hay nada de com ni de tecnoatr en su caché, así que el CNAME lo sacó de sus datos","No","Solo si es el primario","No se puede saber"],"Si lo hubiera preguntado, tendría en caché los NS de com y de tecnoatr."),
+ q("b48b","dns","¿Cuál es la IP del principal de nationalcom.gr.?",["*No se puede saber sin el SOA: 40.4.4.4 o 40.5.5.5","40.4.4.4","40.5.5.5","40.2.2.23"],"Los NS no tienen orden."),
+ q("b48c","dns","¿Qué tiene de raro servergr2.gr?",["*Su IP (120.2.33.4) está fuera de 40.0.0.0/8, así que no puede ser un DNS","Tiene un TTL alto","Está en otro dominio","Nada"],"Todos los DNS, salvo la raíz, están en 40/8."),
+ q("b48d","dns","Ahora mismo, ¿se resuelve test-server.gr. sin pasar por la raíz?",["*Sí: el NS de gr y el A de servergr están en caché","No","Sí, desde la caché","Solo con servergr2"],"servergr: NS 1500 y A 2500."),
+ q("b48e","dns","¿Y a los 1800 s?",["*No: solo queda servergr2 (NS 2200), que no es un DNS real; hay que volver a la raíz","Sí, con servergr2","Sí, con servergr","Sí, desde la caché"],"El NS de servergr caducó a los 1500."),
+ q("b48f","dns","A los 1800 s se pregunta gorillaz.tic.nationalcom.gr. ¿Cuántos DNS intervienen?",["*2: marathon y servertic2.tecnoatr.com (marathon conoce su IP porque es autoritativo de tecnoatr.com)","3","4","1"],"Queda vivo tic NS servertic2 (2000)."),
+ q("b48g","dns","¿Qué PTR hace falta para 100.10.10.10?",["*10.10.10.100.in-addr.arpa. IN PTR thserverx-matrix.tic.nationalcom.gr.","10.10.10.100.in-addr.arpa. IN PTR thessaloniki.tic.nationalcom.gr.","10.10.10.100.in-addr.arpa. IN PTR www.tecnoatr.com.","100.10.10.10.in-addr.arpa. IN PTR thserverx-matrix.tic.nationalcom.gr."],"El PTR apunta al nombre canónico, no a un alias."),
+ q("b48h","dns","feder.tecnoatr.com cambia de IP. ¿Cuánto debe esperar desktop087?",["*8000 s: marathon es secundario (el primario es fireb) y se actualiza cada Refresh","2000 s (TTL del A)","9000 s","0 s"],"desktop087 no tiene caché, y marathon responde con su copia de la zona.")]},
+{id:"4.9",t:"dns",title:"Pistas en el paquete IP",d:7.5,qs:[
+ q("c49a","dns","¿Qué FQDN se consultó?",["*charmander.fuego.pk.","blaine.fuego.pk.","fuego.pk.","kanto.ciudades.pk."],"Es el único A que no es de un servidor DNS."),
+ q("c49b","dns","¿Cuál es la IP de kanto?",["*100.20.1.23","3.2.3.7","9.78.3.4","No se puede saber"],"La respuesta va del servidor (origen) al cliente (destino)."),
+ q("c49c","dns","¿Qué registro permite obtener el nombre de kanto a partir de su IP?",["*23.1.20.100.in-addr.arpa. IN PTR kanto.ciudades.pk.","100.20.1.23.in-addr.arpa. IN PTR kanto.ciudades.pk.","kanto.ciudades.pk. IN PTR 100.20.1.23","23.1.20.100.in-addr.arpa. IN A kanto.ciudades.pk."],"PTR con la IP escrita al revés."),
+ q("c49d","dns","¿Se puede crear el alias salamandra.espuma.pk. de charmander.fuego.pk.?",["*Sí: un CNAME en la zona pk., porque espuma.pk no está delegado","Sí: un CNAME en la zona fuego.pk.","No: el alias debe estar en el mismo dominio","Sí: un A en la zona fuego.pk."],"El CNAME va en la zona del alias."),
+ q("c49e","dns","A los 1500 s, pokedex pregunta charmilion.fuego.pk. ¿Cuántos DNS intervienen?",["*2: kanto y blaine (o katsura)","4: kanto, raíz, pk y blaine","1: solo kanto","3: kanto, pk y blaine"],"Siguen vivos el NS de fuego (5000) y el A de blaine (3000)."),
+ q("c49f","dns","A los 4000 s, una estación con DNS 100.20.1.23 pregunta charmilion. ¿Qué pasa?",["*Se resuelve, sin ser autoritativa, con 4 servidores: kanto, raíz, pk y blaine","Se resuelve con 2, porque el NS de fuego está vivo","No se resuelve","Se resuelve de forma autoritativa"],"Han caducado los A de blaine y katsura (3000) y los de pk (3600)."),
+ q("c49g","dns","A los 3000 s, una estación con DNS 3.2.3.7 pregunta charmilion. ¿Qué pasa?",["*No hay respuesta: 3.2.3.7 es pokedex, un cliente","Se resuelve desde la caché de pokedex","Se resuelve con 2 servidores","Se resuelve de forma autoritativa"],"Era el destino del paquete: el cliente."),
+ q("c49h","dns","A los 6000 s, una estación con DNS 9.78.3.4 pregunta charmilion. ¿Qué pasa?",["*Se resuelve de forma autoritativa, con 1 servidor","No se resuelve","Se resuelve con 4 servidores","No hay respuesta"],"9.78.3.4 es blaine, que gestiona fuego.pk."),
+ q("c49i","dns","A los 3800 s, una estación con DNS 16.6.74.23 pregunta charmilion. ¿Qué pasa?",["*No obtiene la IP: azul.pk es un TLD, no acepta recursivas y solo da una referencia","Se resuelve de forma autoritativa","Se resuelve con 2 servidores","Se resuelve desde caché"],"Raíz y TLD no aceptan recursivas."),
+ q("c49j","dns","Caen todos los servidores de 9.0.0.0/8. ¿Durante cuánto tiempo se resuelve charmander desde pokedex?",["*1200 s","0 s","3000 s","Sin límite"],"Caen todos los DNS de fuego; solo queda la caché de kanto."),
+ q("c49k","dns","Caen todos los de 100.0.0.0/8. ¿Durante cuánto tiempo?",["*0 s","1200 s","4400 s","Sin límite"],"Cae kanto, y pokedex no tiene caché."),
+ q("c49l","dns","Caen todos los de 130.0.0.0/8. ¿Durante cuánto tiempo?",["*Sin límite","1200 s","0 s","5000 s"],"Solo cae el host charmander, y su IP sigue en el DNS.")]},
+{id:"4.10",t:"dns",title:"Delegación olvidada",d:8.5,qs:[
+ q("b410a","dns","¿Quién envió la respuesta “no se puede resolver”?",["*pdns3.phipe.i3us.edu (110.10.5.83)","serverAux","dns-server.edu","ucd"],"Es la IP origen del paquete, y coincide con el A de pdns3."),
+ q("b410b","dns","¿Por qué no se resuelve?",["*En la zona phipe.i3us.edu falta la delegación (NS + A) de uxDpto","El www no existe en uxDpto","serverAux está apagado","La caché estaba vacía"],"No hay NS de uxDpto en caché: phipe no sabe que existe."),
+ q("b410c","dns","¿Qué otro error se ve en la caché?",["*El NS de i3us.edu apunta a severA, pero el A es de serverA (errata)","El TTL de edu es bajo","pdns3 tiene TTL 6000","Ninguno"],"Un NS debe apuntar a un nombre con A."),
+ q("b410d","dns","Tras arreglarlo, ¿cuánto tiene que esperar maqusu, como mínimo?",["*20000 s: servdns guarda la respuesta negativa durante el TTL negativo (Minimum)","0 s","60000 s","5500 s"],"El TTL negativo es el mismo en todas las zonas: 20000."),
+ q("b410e","dns","¿Y si su DNS por defecto fuera 120.20.2.75?",["*No esperaría: es serverAux, autoritativo de uxDpto","20000 s","60000 s","No respondería"],"Un autoritativo responde con sus propios datos."),
+ q("b410f","dns","www.phipe.i3us.edu devuelve 190.1.3.32. ¿Qué es www.phipe?",["*Un alias (CNAME) de virmarathon.uxDpto.phipe.i3us.edu.","Un A propio","Un NS","Un MX"],"Las IP de los A no se repiten, y 190.1.3.32 es la de virmarathon."),
+ q("b410g","dns","¿Qué falta en el mapa del primario de uxDpto?",["*Los NS (ucd y serverAux), el A de ucd, los MX 50 chivatin y 40 mserver, y sus A","Solo los MX","El A de serverAux","Nada"],"El A de serverAux va en otrodominio.es.")]},
+{id:"4.11",t:"dns",title:"Primario en mantenimiento",d:7,qs:[
+ q("b411a","dns","¿Cómo obtiene el DNS por defecto la IP de dns-server.otrodominio.es?",["*La resuelve aparte por la jerarquía de es: no hay glue porque está fuera de la zona","La tiene la zona enero","Se la da la raíz junto con la referencia de edu","No la necesita"],"Por eso su caché también acaba con NS + A de es. y otrodominio.es."),
+ q("b411b","dns","¿Quién responde finalmente www.enero.examen.atr1.edu?",["*dns-server.otrodominio.es (serverd está parado)","serverd","serverDNS.examen.atr1.edu","El DNS por defecto desde su caché"],"El secundario sigue respondiendo con su copia."),
+ q("b411c","dns","¿Se puede crear ahora el alias seudo de mail.enero…?",["*No: los cambios se hacen en el primario (serverd), que está parado; además falta el A de mail","Sí, en dns-server.otrodominio.es","Sí, en examen.atr1.edu","No, nunca"],"El secundario solo copia la zona."),
+ q("b411d","dns","¿Qué PTR hace falta para 180.2.33.2?",["*2.33.2.180.in-addr.arpa. IN PTR www.enero.examen.atr1.edu. (zona 33.2.180.in-addr.arpa.)","180.2.33.2.in-addr.arpa. IN PTR www.enero.examen.atr1.edu.","www.enero.examen.atr1.edu. IN PTR 180.2.33.2","2.33.2.180.in-addr.arpa. IN A www.enero.examen.atr1.edu."],"La IP se escribe al revés."),
+ q("b411e","dns","¿Qué error tiene el cuadro?",["*“serverd. enero.examen.atr1.edu.” lleva un espacio, así que se lee como serverd. (otro nombre)","Falta el serial","Tiene dos NS","El TTL negativo es alto"],"Un espacio corta el nombre.")]},
+{id:"4.12",t:"dns",title:"atr1.asignaturas",d:7,qs:[
+ q("b412a","dns","DNS por defecto 140.21.2.33. ¿Qué pasa?",["*No hay respuesta: es sermail, fuera de 100.10.0.0/16, así que no es un DNS","Respuesta autoritativa","Respuesta no autoritativa","Error"],"Los DNS están en 100.10/16."),
+ q("b412b","dns","DNS por defecto 100.10.3.2. ¿Qué pasa?",["*Respuesta autoritativa: es domser.otrodominio.es, NS de la zona","Respuesta no autoritativa","Sin respuesta","Responde desde caché"],"Es uno de los dos NS."),
+ q("b412c","dns","DNS por defecto 100.10.34.5. ¿Qué pasa?",["*Respuesta no autoritativa: es un DNS (100.10/16), pero no es NS de la zona","Respuesta autoritativa","Sin respuesta","No se sabe si es un DNS"],"Resuelve recorriendo la jerarquía."),
+ q("b412d","dns","¿Qué incoherencia tiene el cuadro?",["*El SOA nombra a serverp como primario, pero no aparece en los NS ni tiene A","El MX 15 está fuera del dominio","Hay dos NS","Las IP son distintas"],"Un MX fuera del dominio es válido."),
+ q("b412e","dns","Con el primario apagado, ¿quién responde sftpd?",["*domser.otrodominio.es (secundario)","server.atr1","La raíz","Nadie"],"El secundario sigue respondiendo."),
+ q("b412f","dns","A los 4500 s se pregunta sermail. ¿Por dónde empieza?",["*El NS de atr1 (4000) caducó: se pregunta a asignaturas.ic.edu (NS 4800 vivo), que remite a domser","Directo a domser","Por la raíz","Desde la caché"],"Se busca el NS vivo más cercano."),
+ q("b412g","dns","El correo cambia de IP. ¿Cuánto hay que esperar como máximo?",["*65000 s: hasta 60000 s para que el secundario lo copie (Refresh) + 5000 s del TTL del A","5000 s","60000 s","100000 s"],"Máximo = Refresh + TTL."),
+ q("b412h","dns","¿A qué servidor se entrega primero el correo de atr1?",["*mdam.otro.dominio.es (prioridad 15)","sermail (40)","A los dos a la vez","A server"],"Primero el de número menor.")]}
+];
+
+/* Casos extra (nuevos, estilo examen) */
+const EXTRA=[
 {id:"cttl",t:"dns",title:"Cuenta atrás de TTL",
- intro:"Ejercicio nuevo, estilo examen. Caché del DNS por defecto justo tras resolver una consulta (t = 0). Todas las consultas posteriores llegan a este mismo servidor.",
+ intro:"Caché del DNS por defecto justo tras resolver una consulta (t = 0). Todas las consultas posteriores llegan a este mismo servidor.",
  code:`net.            1000 IN NS a.nic.net.
 a.nic.net.      3000 IN A  40.1.1.1
 ocio.net.       2000 IN NS dns.ocio.net.
@@ -288,14 +1466,14 @@ dns.ocio.net.   1500 IN A  40.2.2.2
 ns2.otro.org.   4000 IN A  40.3.3.3
 cine.ocio.net.   800 IN A  150.1.1.1`,
  qs:[
-  q("cta","dns","¿Qué se consultó en t = 0?",["*El A de cine.ocio.net.","El NS de ocio.net.","El A de dns.ocio.net.","El A de a.nic.net."],"Es el único A que no pertenece a un servidor DNS."),
+  q("cta","dns","¿Qué se consultó en t = 0?",["*El A de cine.ocio.net.","El NS de ocio.net.","El A de dns.ocio.net.","El A de a.nic.net."],"Es el único A que no es de un servidor DNS."),
   q("ctb","dns","En t = 900 se vuelve a preguntar cine.ocio.net. ¿Cuántos servidores DNS intervienen?",["*2: el DNS por defecto y uno de ocio.net","1: se responde desde caché","4: por defecto, raíz, net y ocio","3: por defecto, net y ocio"],"El A de cine (800) ha caducado, pero el NS de ocio (2000) y los A de sus servidores siguen vivos."),
-  q("ctc","dns","En t = 1700 se pregunta teatro.ocio.net. ¿Por dónde empieza?",["*Va directo a ns2.otro.org: el NS de ocio vive y el A de ns2 (4000) también","Por la raíz, porque el A de dns.ocio.net ha caducado","Por dns.ocio.net","Por a.nic.net"],"Basta con un NS vivo cuyo A también esté vivo. El de dns.ocio.net caducó en 1500, pero el de ns2 no."),
-  q("ctd","dns","En t = 2500 se pregunta otra.ocio.net. ¿Por dónde empieza?",["*Por la raíz: han caducado el NS de ocio (2000) y el de net (1000)","Por ns2.otro.org, porque su A sigue vivo","Por a.nic.net, porque su A sigue vivo","Responde desde caché"],"Sin NS vivos, los A que quedan no sirven: no se sabe qué dominio lleva cada servidor."),
-  q("cte","dns","¿Por qué en t = 2500 no sirve que siga vivo el A de a.nic.net?",["*Porque sin el NS de net. no sabe que a.nic.net gestiona net.","Porque a.nic.net no es autoritativo","Porque los A nunca se usan para resolver","Porque su TTL es demasiado alto"],"Hace falta la pareja: NS (quién lleva el dominio) y A (dónde está ese servidor).")
+  q("ctc","dns","En t = 1700 se pregunta teatro.ocio.net. ¿Por dónde empieza?",["*Va directo a ns2.otro.org: el NS de ocio vive y el A de ns2 (4000) también","Por la raíz, porque el A de dns.ocio.net ha caducado","Por dns.ocio.net","Por a.nic.net"],"Basta con un NS vivo cuyo A también esté vivo."),
+  q("ctd","dns","En t = 2500 se pregunta otra.ocio.net. ¿Por dónde empieza?",["*Por la raíz: han caducado el NS de ocio (2000) y el de net (1000)","Por ns2.otro.org, porque su A sigue vivo","Por a.nic.net, porque su A sigue vivo","Responde desde caché"],"Sin NS vivos, los A no sirven."),
+  q("cte","dns","¿Por qué en t = 2500 no sirve que siga vivo el A de a.nic.net?",["*Porque sin el NS de net. no sabe que a.nic.net gestiona net.","Porque a.nic.net no es autoritativo","Porque los A nunca se usan para resolver","Porque su TTL es demasiado alto"],"Hace falta la pareja NS + A.")
  ]},
 {id:"czona",t:"dns",title:"Busca los errores en la zona",
- intro:"Ejercicio nuevo, estilo 4.7. Fichero de zona de redes.edu. tal como lo ha escrito el administrador:",
+ intro:"Fichero de zona de redes.edu. tal como lo ha escrito el administrador:",
  code:`$ORIGIN redes.edu.
 $TTL 3600
 @     IN SOA ns1.redes.edu. admin.redes.edu. (
@@ -311,167 +1489,330 @@ ns1   IN A   10.0.0.1
 web   IN A   10.0.0.20
 www   IN CNAME web`,
  qs:[
-  q("cza","dns","¿Cómo interpreta el servidor “ns2.redes.edu”, escrito sin punto final?",["*Como ns2.redes.edu.redes.edu.","Como ns2.redes.edu.","Como ns2.","Da error de sintaxis y no arranca"],"Sin punto final se le añade el $ORIGIN detrás."),
-  q("czb","dns","¿Es correcto “@ IN NS ns1”?",["*Sí: se completa como ns1.redes.edu.","No: falta el punto final","No: un NS debe ser siempre un FQDN","No: @ no se puede usar en un NS"],"Un nombre relativo es válido si el resultado de añadirle el $ORIGIN es el que quieres."),
-  q("czc","dns","¿Qué falta para que funcione el correo de redes.edu?",["*Un registro A para correo.redes.edu.","Un PTR","Un segundo MX","Nada"],"El MX apunta a un nombre, y ese nombre necesita su A."),
-  q("czd","dns","¿Cuál es el correo del administrador de la zona?",["*admin@redes.edu","admin.redes.edu@redes.edu","ns1@redes.edu","root@redes.edu"],"En el SOA, el primer punto del segundo campo equivale a la @."),
-  q("cze","dns","¿Qué significa el 300 del campo Minimum?",["*Las respuestas negativas se guardan 300 s en caché","El secundario se actualiza cada 300 s","Es el TTL de todos los registros","Es el tiempo máximo sin contactar con el principal"],"El TTL de todos los registros lo fija aquí $TTL (3600)."),
-  q("czf","dns","Tras corregir los errores, el administrador cambia una IP. ¿Qué más debe tocar en el SOA?",["*Incrementar el Serial","Incrementar el Minimum","Reducir el Expire","Nada"],"Si no sube el serial, los secundarios no se enteran del cambio."),
-  q("czg","dns","¿Es correcto “www IN CNAME web”?",["*Sí: www.redes.edu. es alias de web.redes.edu.","No: un CNAME debe apuntar a una IP","No: falta el punto en www","No: un alias no puede apuntar a un nombre relativo"],"web existe y tiene su A, así que el alias funciona.")
+  q("cza","dns","¿Cómo interpreta el servidor “ns2.redes.edu”, sin punto final?",["*Como ns2.redes.edu.redes.edu.","Como ns2.redes.edu.","Como ns2.","Da error de sintaxis"],"Sin punto final se le añade el $ORIGIN."),
+  q("czb","dns","¿Es correcto “@ IN NS ns1”?",["*Sí: se completa como ns1.redes.edu.","No: falta el punto final","No: un NS debe ser siempre un FQDN","No: @ no vale en un NS"],"Un nombre relativo es válido si el resultado es el que quieres."),
+  q("czc","dns","¿Qué falta para que funcione el correo?",["*Un registro A para correo.redes.edu.","Un PTR","Un segundo MX","Nada"],"El MX apunta a un nombre, y ese nombre necesita su A."),
+  q("czd","dns","¿Cuál es el correo del administrador?",["*admin@redes.edu","admin.redes.edu@redes.edu","ns1@redes.edu","root@redes.edu"],"En el SOA, el primer punto equivale a la @."),
+  q("cze","dns","¿Qué significa el 300 del campo Minimum?",["*Las respuestas negativas se guardan 300 s en caché","El secundario se actualiza cada 300 s","Es el TTL de todos los registros","Es el tiempo máximo sin contactar con el principal"],"El TTL general lo fija $TTL."),
+  q("czf","dns","Tras corregir los errores, ¿qué más hay que tocar en el SOA?",["*Incrementar el Serial","Incrementar el Minimum","Reducir el Expire","Nada"],"Si no, los secundarios no se enteran del cambio."),
+  q("czg","dns","¿Es correcto “www IN CNAME web”?",["*Sí: www.redes.edu. es alias de web.redes.edu.","No: un CNAME debe apuntar a una IP","No: falta el punto en www","No: un alias no puede apuntar a un nombre relativo"],"web existe y tiene su A.")
  ]},
 {id:"cldap",t:"ldap",title:"Un DIT de profesores",
- intro:"Ejercicio nuevo, estilo 2.4 y 2.5. En un DIT existen estas entradas:",
+ intro:"En un DIT existen estas entradas:",
  code:`DN: cn=Ana Ruiz, ou=Redes, ou=Profesores, dc=eii, dc=us, dc=es
 DN: cn=Luis Gil, ou=Redes, ou=Profesores, dc=eii, dc=us, dc=es
 DN: cn=Ana Ruiz, ou=Bases de Datos, ou=Profesores, dc=eii, dc=us, dc=es`,
  qs:[
-  q("cla","ldap","¿Cuál es el RDN de la primera entrada?",["*cn=Ana Ruiz","cn=Ana Ruiz, ou=Redes","dc=es","ou=Redes"],"El RDN es solo el primer componente del DN."),
-  q("clb","ldap","¿Es válido que existan las dos entradas cn=Ana Ruiz?",["*Sí: cuelgan de padres distintos (Redes y Bases de Datos)","No: el cn debe ser único en todo el DIT","Solo si tienen distinto objectClass","Sí, y podrían ser incluso hermanas"],"El RDN solo tiene que ser único entre hermanos. Sus DN son distintos."),
-  q("clc","ldap","Llega otra profesora de Redes que también se llama Ana Ruiz. ¿Se puede añadir?",["*Con ese mismo RDN no; habría que usar uno multivaluado, por ejemplo cn=Ana Ruiz+mail=…","Sí, LDAP lo permite sin cambios","Sí, si cambia solo el mail","No, nunca"],"Serían hermanas con el mismo RDN. Hace falta un atributo extra para desempatar."),
-  q("cld","ldap","¿Qué profundidad mínima tiene el DIT, contando dc=es como nivel 1?",["*6","5","4","7"],"dc=es, dc=us, dc=eii, ou=Profesores, ou=Redes y cn=… son 6 niveles."),
-  q("cle","ldap","¿Qué clase de objeto será “Redes”?",["*organizationalUnit","inetOrgPerson","person","alias"],"Es un nodo ou que agrupa entradas, no una persona."),
-  q("clf","ldap","Al consultar por Ana Ruiz llega un referral con una URI. ¿Qué significa?",["*Este servidor no tiene la entrada, pero indica otro que puede tenerla","La entrada no existe","El cliente no tiene permiso","Hay que repetir la consulta en el mismo servidor"],"El cliente debe contactar con la URI y evitar los bucles.")
+  q("cla","ldap","¿Cuál es el RDN de la primera entrada?",["*cn=Ana Ruiz","cn=Ana Ruiz, ou=Redes","dc=es","ou=Redes"],"El RDN es el primer componente del DN."),
+  q("clb","ldap","¿Es válido que existan las dos entradas cn=Ana Ruiz?",["*Sí: cuelgan de padres distintos","No: el cn debe ser único en todo el DIT","Solo si tienen distinto objectClass","Sí, y podrían ser incluso hermanas"],"El RDN solo tiene que ser único entre hermanos."),
+  q("clc","ldap","Llega otra Ana Ruiz a Redes. ¿Se puede añadir?",["*Con ese mismo RDN no; habría que usar uno multivaluado, p. ej. cn=Ana Ruiz+mail=…","Sí, sin cambios","Sí, si cambia solo el mail","No, nunca"],"Serían hermanas con el mismo RDN."),
+  q("cld","ldap","¿Qué profundidad mínima tiene el DIT, con la raíz como nivel 1?",["*4","6","5","3"],"Como mínimo, el dominio dc=eii,dc=us,dc=es es un único nodo: dominio, Profesores, Redes y la entrada."),
+  q("cle","ldap","¿Qué clase de objeto será “Redes”?",["*organizationalUnit","inetOrgPerson","person","alias"],"Es un nodo ou que agrupa."),
+  q("clf","ldap","Al consultar a Ana Ruiz llega un referral con una URI. ¿Qué significa?",["*Este servidor no tiene la entrada, pero indica otro que puede tenerla","La entrada no existe","El cliente no tiene permiso","Hay que repetir la consulta en el mismo servidor"],"El cliente contacta con la URI y debe evitar bucles.")
  ]},
 {id:"ctftp",t:"ftp",title:"Descarga por TFTP",
- intro:"Ejercicio nuevo, estilo 3.1 y 3.3. Un cliente descarga por TFTP el fichero binario config.bin, de 1536 bytes. No hay pérdidas ni errores.",
+ intro:"Un cliente descarga por TFTP el fichero binario config.bin, de 1536 bytes. No hay pérdidas ni errores.",
  code:`1536 = 512 + 512 + 512`,
  qs:[
-  q("ctfa","ftp","¿Cuál es el primer mensaje?",["*RRQ (opcode 1), fichero config.bin, modo octet","WRQ (opcode 2), modo octet","RRQ (opcode 1), modo netascii","DATA con bloque 1"],"Descargar es leer: RRQ. Es binario: octet."),
-  q("ctfb","ftp","¿Cuántos mensajes DATA se envían?",["*4: tres de 512 bytes y uno de 0 bytes","3","2","5"],"1536 es múltiplo de 512, así que el final se marca con un DATA vacío."),
-  q("ctfc","ftp","¿Quién envía los ACK?",["*El cliente, que es quien recibe los datos","El servidor","Los dos","Nadie: TFTP no usa ACK"],"Cada DATA lo confirma quien lo recibe, con un ACK del mismo número de bloque."),
-  q("ctfd","ftp","¿Cuántos mensajes hay en total?",["*9: RRQ, 4 DATA y 4 ACK","8","7","10"],"En una lectura no hay ACK 0: el servidor responde al RRQ directamente con el DATA 1."),
-  q("ctfe","ftp","¿A qué puerto del servidor va el RRQ?",["*UDP 69","TCP 69","TCP 21","UDP 53"],"TFTP va sobre UDP, puerto 69."),
-  q("ctff","ftp","Si el servidor no tiene config.bin, ¿qué responde?",["*ERROR (opcode 5) con código 1, File not found","ACK con bloque 0","DATA vacío","ERROR con código 6"],"El código 6 es File already exists.")
+  q("ctfa","ftp","¿Cuál es el primer mensaje?",["*RRQ (opcode 1), config.bin, modo octet","WRQ (opcode 2), modo octet","RRQ (opcode 1), modo netascii","DATA con bloque 1"],"Descargar es leer, y es un fichero binario."),
+  q("ctfb","ftp","¿Cuántos mensajes DATA se envían?",["*4: tres de 512 y uno de 0 bytes","3","2","5"],"1536 es múltiplo de 512."),
+  q("ctfc","ftp","¿Quién envía los ACK?",["*El cliente, que es quien recibe los datos","El servidor","Los dos","Nadie"],"Confirma quien recibe."),
+  q("ctfd","ftp","¿Cuántos mensajes hay en total?",["*9: RRQ, 4 DATA y 4 ACK","8","7","10"],"En una lectura no hay ACK 0."),
+  q("ctfe","ftp","¿A qué puerto del servidor va el RRQ?",["*UDP 69","TCP 69","TCP 21","UDP 53"],"TFTP siempre va sobre UDP 69."),
+  q("ctff","ftp","Si el servidor no tiene config.bin, ¿qué responde?",["*ERROR (opcode 5) con código 1, File not found","ACK con bloque 0","Un DATA vacío","ERROR con código 6"],"El 6 es File already exists.")
  ]}
 ];
 
-/* ---------- Índices ---------- */
+/* Tarjetas de repaso rápido */
+const CARDS=[
+["Longitud máxima de una etiqueta DNS","63 caracteres"],["Profundidad máxima del árbol DNS","127 niveles"],["Servidores raíz","13 (a–m), coordinados por IANA"],
+["Host → DNS por defecto","Consulta recursiva"],["DNS por defecto → jerarquía","Consultas iterativas"],["¿Aceptan recursivas la raíz y los TLD?","No: tendrían que reservar recursos"],
+["¿Quién guarda caché?","Solo el que resuelve (recibió la recursiva)"],["Una referencia lleva…","NS (quién) + A (dónde)"],["¿Cuándo hace falta el glue?","Cuando el servidor DNS está dentro del dominio delegado"],
+["SOA · Serial","Se incrementa con cada cambio (YYYYMMDDnn)"],["SOA · Refresh","Cada cuánto el secundario comprueba si actualizarse"],["SOA · Retry","Reintento si falla el refresh"],
+["SOA · Expire","Máximo sin contactar con el principal"],["SOA · Minimum","TTL de las respuestas negativas"],["Correo del admin en el SOA","1.er punto = @ (postmaster.a2… → postmaster@a2…)"],
+["MX con prioridades 10 y 20","Se usa primero el 10 (número menor)"],["Alias","CNAME"],["IP → nombre","PTR en in-addr.arpa, con la IP al revés"],
+["Nombre sin punto final","Se le añade el $ORIGIN"],["Zona vs dominio","Zona = lo que gestiona una entidad · Dominio = subárbol entero"],["Registry / registrador / registrant","Mantiene el TLD / intermediario / dueño"],
+["Caso cache: ¿por dónde empiezo?","NS vivo más cercano con su A vivo; si no, la raíz"],["Cambio de IP: espera máxima","Refresh (secundario) + TTL (cachés)"],["Respuesta negativa en caché","Dura el Minimum del SOA"],
+["Paquete de respuesta DNS","Origen = servidor · Destino = cliente"],["Pila de una consulta DNS","DNS / UDP 53 / IP / Ethernet"],
+["Cliente y servidor LDAP","DUA y DSA"],["Puerto LDAP","TCP 389"],["LDAP frente a X.500","TCP/IP en vez de OSI y menos operaciones"],
+["RFC del protocolo LDAP / modelos / esquema","4511 / 4512 / 4519"],["DIB y DIT","Toda la información / organizada en árbol"],["RDN","Único entre hermanos (pares unidos con +)"],
+["DN","RDN hasta la raíz; único en todo el DIT"],["objectClass","Se modifica, pero no se borra"],["Atributos operacionales","No se devuelven salvo que se pidan (creatorsName…)"],
+["Referral","Otro servidor puede hacerlo (URI); nunca en Unbind ni Abandon"],["Errores en una respuesta LDAP","Un solo código"],["Contexto de nombre","Subárbol de un único DSA maestro"],
+["TFTP","UDP 69, sin carpetas ni cifrado"],["Opcodes TFTP","1 RRQ · 2 WRQ · 3 DATA · 4 ACK · 5 ERROR"],["Respuesta a RRQ / WRQ","DATA 1 / ACK 0"],
+["Último bloque TFTP","< 512 B; si es múltiplo de 512, DATA de 0 B"],["Errores TFTP","1 not found · 2 access · 3 disk full · 6 already exists"],["Mensajes de una escritura TFTP","WRQ + ACK 0 + N DATA + N ACK"],
+["FTP puertos","21 control · 20 datos (activo)"],["FTP activo / pasivo","Abre los datos el servidor (20) / el cliente tras PASV-PORT"],["RETR / STOR / get","Bajar / subir (protocolo) / comando del cliente"],
+["FTP 331 · 425","Falta la contraseña · no se abre la conexión de datos"]
+];
+
+/* Plan de estudio */
+const PLAN=[
+{d:"2026-11-03",lab:"Mar 3",items:["Instalar la app y abrirla con internet","Leer las reglas de oro de DNS","Hacer un test rápido"]},
+{d:"2026-11-04",lab:"Mié 4 · viaje",items:["Ficha de DNS","Todas las tarjetas","Test solo DNS"]},
+{d:"2026-11-05",lab:"Jue 5 · viaje",items:["Boletín 4.6 y 4.9 (practicar y leer la solución)","Caso extra: cuenta atrás de TTL","Repasar fallos"]},
+{d:"2026-11-06",lab:"Vie 6",items:["Boletín 4.1, 4.2, 4.3 y 4.5","Boletín 4.4","Test rápido"]},
+{d:"2026-11-07",lab:"Sáb 7",items:["Boletín 4.7 y 4.8","Boletín 4.10, 4.11 y 4.12","Caso extra: busca los errores en la zona"]},
+{d:"2026-11-08",lab:"Dom 8",items:["Ficha LDAP + boletín 2.1 a 2.8","Ficha TFTP/FTP + boletín 3.1 a 3.3","Simulacro completo","Repasar fallos"]},
+{d:"2026-11-09",lab:"Lun 9 · examen",items:["Reglas de oro y tarjetas antes de entrar"]}
+];
+
+/* ================= Índices ================= */
 const ALL={};
-Q.forEach(x=>ALL[x.id]={qq:x,caso:null});
-CASOS.forEach(c=>c.qs.forEach(x=>ALL[x.id]={qq:x,caso:c}));
+const mdCache={};
+function mdOf(id){ if(!(id in mdCache)){const el=document.getElementById(id); mdCache[id]=el?md(el.textContent):"";} return mdCache[id]; }
+Q.forEach(x=>ALL[x.id]={qq:x,ctx:null});
+BOL.forEach(b=>b.qs.forEach(x=>ALL[x.id]={qq:x,ctx:{title:"Problema "+b.id+" · "+b.title,html:()=>mdOf("enu-"+b.id)}}));
+EXTRA.forEach(c=>c.qs.forEach(x=>ALL[x.id]={qq:x,ctx:{title:c.title,html:()=>`<p>${esc(c.intro)}</p><pre>${esc(c.code)}</pre>`}}));
 const poolByTema=t=>Object.values(ALL).filter(it=>it.qq.t===t);
 
-/* ---------- Progreso (solo en este navegador) ---------- */
+/* ================= Progreso ================= */
 const KEY="atr1-repaso-v1";
-let S={last:{},wrong:[]};
-try{const raw=localStorage.getItem(KEY); if(raw){const p=JSON.parse(raw); if(p&&p.last) S={last:p.last,wrong:Array.isArray(p.wrong)?p.wrong:[]};}}catch(e){}
+let S={last:{},wrong:[],plan:{},best:null};
+try{const raw=localStorage.getItem(KEY); if(raw){const p=JSON.parse(raw); if(p&&p.last) S={last:p.last||{},wrong:Array.isArray(p.wrong)?p.wrong:[],plan:p.plan||{},best:p.best??null};}}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function record(id,ok){S.last[id]=ok?1:0; S.wrong=S.wrong.filter(x=>x!==id); if(!ok) S.wrong.push(id); save();}
 
-/* ---------- Utilidades ---------- */
+/* ================= Utilidades ================= */
 const $app=document.getElementById("app");
-const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function inl(s){return esc(s).replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/\\\*/g,"*")}
+function md(src){
+  const lines=src.replace(/^\n+|\s+$/g,"").split("\n"); let h="",pre=null,list=null;
+  const close=()=>{if(list){h+=`</${list}>`;list=null}};
+  for(const raw of lines){
+    if(raw.trim().startsWith("```")){ if(pre){h+=`<pre>${esc(pre.join("\n"))}</pre>`;pre=null}else{close();pre=[]} continue; }
+    if(pre){pre.push(raw);continue}
+    const line=raw.trim();
+    if(line.startsWith("## ")){close();h+=`<h3>${inl(line.slice(3))}</h3>`}
+    else if(/^- /.test(line)){ if(list!=="ul"){close();h+="<ul>";list="ul"} h+=`<li>${inl(line.slice(2))}</li>` }
+    else if(/^\d+\.\s/.test(line)){ if(list!=="ol"){close();h+="<ol>";list="ol"} h+=`<li>${inl(line.replace(/^\d+\.\s/,""))}</li>` }
+    else if(line===""){close()}
+    else {close();h+=`<p>${inl(line)}</p>`}
+  }
+  close(); if(pre) h+=`<pre>${esc(pre.join("\n"))}</pre>`;
+  return h;
+}
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const L="ABCD";
+const arrow='<span aria-hidden="true">›</span>';
+function daysLeft(){const now=new Date(); const t=new Date(now.getFullYear(),now.getMonth(),now.getDate()); return Math.round((EXAM-t)/86400000);}
+function todayKey(){const n=new Date();return n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0")}
+function bolProgress(b){return b.qs.filter(x=>S.last[x.id]===1).length}
+function btn(attr,title,sub,primary){return `<button class="btn${primary?" primary":""}" ${attr}><span class="stack" style="gap:2px;min-width:0"><strong>${title}</strong>${sub?`<span class="sub">${sub}</span>`:""}</span>${arrow}</button>`}
+function topbar(title){return `<div class="top"><div class="toprow"><button class="ghost" data-go="home">‹ Inicio</button><span class="count">${esc(title)}</span></div></div>`}
+function wireGo(){ $app.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go,b.dataset.arg)); }
+let timer=null;
+function go(view,arg){
+  if(timer){clearInterval(timer);timer=null}
+  confirmReset=view==="home"?confirmReset:false;
+  ({home,boletin,problema,ficha,reglas,tarjetas,plan,extras}[view]||home)(arg);
+  window.scrollTo(0,0);
+}
 
-/* ---------- Pantalla de inicio ---------- */
+/* ================= Inicio ================= */
 let confirmReset=false;
 function home(){
+  const dl=daysLeft();
   const rows=Object.keys(TEMAS).map(t=>{
     const pool=poolByTema(t); const ok=pool.filter(it=>S.last[it.qq.id]===1).length;
     const pct=pool.length?Math.round(ok/pool.length*100):0;
     return `<span class="k">${TEMAS[t]}</span><div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div><span class="n">${ok}/${pool.length}</span>`;
   }).join("");
   const nw=S.wrong.filter(id=>ALL[id]).length;
-  const caseBtns=CASOS.map(c=>{
-    const ok=c.qs.filter(x=>S.last[x.id]===1).length;
-    return `<button class="btn" data-case="${c.id}"><span class="stack" style="gap:2px;min-width:0"><span><span class="chip">${TEMAS[c.t]}</span></span><strong>${esc(c.title)}</strong><span class="sub">${c.qs.length} preguntas · ${ok} acertadas</span></span><span aria-hidden="true">›</span></button>`;
-  }).join("");
+  const today=PLAN.find(p=>p.d===todayKey());
+  const todayHtml=today?`<section class="section"><span class="label">Hoy toca · ${esc(today.lab)}</span><div class="today">${today.items.map((it,i)=>{const k=today.d+"#"+i;return `<label class="check"><input type="checkbox" id="pl-${k}" data-plan="${k}" ${S.plan[k]?"checked":""}><span>${esc(it)}</span></label>`}).join("")}</div></section>`:"";
   $app.innerHTML=`
   <header class="hero">
-    <span class="label">ATR1 · examen del lunes 9</span>
+    <span class="label">ATR1 · ${dl>1?"examen en "+dl+" días":dl===1?"examen mañana":dl===0?"examen hoy":"examen pasado"}</span>
     <h1>Repaso ATR1</h1>
-    <p>Test de teoría y casos tipo boletín de DNS, LDAP y TFTP/FTP. Cada respuesta trae su explicación.</p>
+    <p>Teoría, boletín resuelto y simulacros de DNS, LDAP y TFTP/FTP. Funciona sin conexión.</p>
   </header>
   <section class="section" aria-label="Progreso">
-    <span class="label">Preguntas acertadas en el último intento</span>
+    <span class="label">Preguntas acertadas en el último intento${S.best!=null?" · mejor simulacro: "+S.best.toFixed(1):""}</span>
     <div class="zone">${rows}</div>
   </section>
+  ${todayHtml}
   <section class="section">
-    <span class="label">Test</span>
-    <button class="btn primary" data-act="rapido"><span class="stack" style="gap:2px"><strong>Test rápido</strong><span class="sub">10 preguntas mezcladas de los tres temas</span></span><span aria-hidden="true">›</span></button>
-    ${Object.keys(TEMAS).map(t=>`<button class="btn" data-tema="${t}"><span class="stack" style="gap:2px"><strong>Solo ${TEMAS[t]}</strong><span class="sub">${Q.filter(x=>x.t===t).length} preguntas de teoría, en orden aleatorio</span></span><span aria-hidden="true">›</span></button>`).join("")}
-    <button class="btn" data-act="fallos" ${nw?"":"disabled"}><span class="stack" style="gap:2px"><strong>Repasar fallos</strong><span class="sub">${nw?nw+" preguntas falladas en el último intento":"Aún no has fallado ninguna"}</span></span><span aria-hidden="true">›</span></button>
+    <span class="label">Practicar</span>
+    ${btn('data-act="simulacro"',"Simulacro de examen","20 preguntas · 40 minutos · nota sobre 10",true)}
+    ${btn('data-act="rapido"',"Test rápido","10 preguntas mezcladas")}
+    <div class="grid3">${Object.keys(TEMAS).map(t=>`<button class="btn small" data-tema="${t}"><strong>${TEMAS[t]}</strong></button>`).join("")}</div>
+    ${btn('data-act="fallos" '+(nw?"":"disabled"),"Repasar fallos",nw?nw+" preguntas falladas":"Aún no has fallado ninguna")}
+    ${btn('data-go="tarjetas"',"Tarjetas",CARDS.length+" datos clave para memorizar")}
   </section>
   <section class="section">
-    <span class="label">Casos prácticos</span>
-    <p style="color:var(--muted)">Ejercicios del boletín y otros nuevos del mismo estilo, paso a paso.</p>
-    ${caseBtns}
+    <span class="label">Boletín de problemas</span>
+    ${btn('data-go="boletin"',"Boletín resuelto","Los 23 problemas: practicar y leer la solución")}
+    ${btn('data-go="extras"',"Casos extra","4 ejercicios nuevos estilo examen")}
+  </section>
+  <section class="section">
+    <span class="label">Teoría</span>
+    ${btn('data-go="reglas"',"Reglas de oro DNS","El método para los problemas de caché y TTL")}
+    <div class="grid3">${Object.keys(TEMAS).map(t=>`<button class="btn small" data-go="ficha" data-arg="${t}"><strong>Ficha ${TEMAS[t]}</strong></button>`).join("")}</div>
+  </section>
+  <section class="section">
+    ${btn('data-go="plan"',"Plan hasta el lunes","Qué hacer cada día, con el viaje en cuenta")}
   </section>
   <section class="section">
     <button class="ghost ${confirmReset?"danger":""}" data-act="reset">${confirmReset?"Pulsa otra vez para borrar todo el progreso":"Borrar progreso"}</button>
   </section>`;
-  $app.querySelectorAll("[data-case]").forEach(b=>b.onclick=()=>{const c=CASOS.find(x=>x.id===b.dataset.case); start(c.qs.map(x=>ALL[x.id]),c.title)});
+  wireGo();
+  $app.querySelectorAll("[data-plan]").forEach(c=>c.onchange=()=>{S.plan[c.dataset.plan]=c.checked;save()});
   $app.querySelectorAll("[data-tema]").forEach(b=>b.onclick=()=>{const t=b.dataset.tema; start(shuffle(Q.filter(x=>x.t===t).map(x=>ALL[x.id])),"Solo "+TEMAS[t])});
   $app.querySelector('[data-act="rapido"]').onclick=()=>start(shuffle(Q.map(x=>ALL[x.id])).slice(0,10),"Test rápido");
+  $app.querySelector('[data-act="simulacro"]').onclick=simulacro;
   const fb=$app.querySelector('[data-act="fallos"]'); if(nw) fb.onclick=()=>start(shuffle(S.wrong.filter(id=>ALL[id]).map(id=>ALL[id])),"Repaso de fallos");
-  $app.querySelector('[data-act="reset"]').onclick=()=>{ if(confirmReset){S={last:{},wrong:[]};save();confirmReset=false;} else confirmReset=true; home(); };
-  window.scrollTo(0,0);
+  $app.querySelector('[data-act="reset"]').onclick=()=>{ if(confirmReset){S={last:{},wrong:[],plan:{},best:null};save();confirmReset=false;} else confirmReset=true; home(); };
 }
 
-/* ---------- Sesión de preguntas ---------- */
+/* ================= Boletín ================= */
+function boletin(){
+  const group=(t,label)=>`<section class="section"><span class="label">${label}</span>${BOL.filter(b=>b.t===t).map(b=>btn(`data-go="problema" data-arg="${b.id}"`,`${b.id} · ${esc(b.title)}`,`Dificultad ${String(b.d).replace(".",",")}/10 · ${bolProgress(b)}/${b.qs.length} acertadas`)).join("")}</section>`;
+  $app.innerHTML=topbar("Boletín")+`<header class="hero"><h2>Boletín resuelto</h2><p>Practica cada problema con preguntas y luego lee la solución completa.</p></header>`+
+   group("dns","DNS (tema 4 del boletín)")+group("ldap","LDAP (tema 2 del boletín)")+group("ftp","TFTP (tema 3 del boletín)");
+  wireGo();
+}
+function problema(id){
+  const b=BOL.find(x=>x.id===id); if(!b) return boletin();
+  $app.innerHTML=`<div class="top"><div class="toprow"><button class="ghost" data-go="boletin">‹ Boletín</button><span class="count">${b.id} · ${TEMAS[b.t]}</span></div></div>
+  <header class="hero"><h2>${b.id} · ${esc(b.title)}</h2><p>Dificultad ${String(b.d).replace(".",",")}/10 · ${bolProgress(b)}/${b.qs.length} acertadas</p></header>
+  <section class="section"><span class="label">Enunciado</span><div class="prose card-lite">${mdOf("enu-"+b.id)}</div></section>
+  <section class="section">${btn('data-act="practicar"',"Practicar este problema",b.qs.length+" preguntas",true)}
+  <button class="btn" data-act="sol" aria-expanded="false"><strong>Ver solución completa</strong>${arrow}</button></section>
+  <section class="section" id="sol" hidden><span class="label">Solución</span><div class="prose card-lite">${mdOf("sol-"+b.id)}</div></section>`;
+  wireGo();
+  $app.querySelector('[data-act="practicar"]').onclick=()=>start(b.qs.map(x=>ALL[x.id]),"Problema "+b.id,()=>problema(b.id));
+  $app.querySelector('[data-act="sol"]').onclick=e=>{const s=document.getElementById("sol"); s.hidden=!s.hidden; e.currentTarget.setAttribute("aria-expanded",String(!s.hidden)); if(!s.hidden) s.scrollIntoView({behavior:"smooth",block:"start"})};
+}
+function extras(){
+  $app.innerHTML=topbar("Casos extra")+`<header class="hero"><h2>Casos extra</h2><p>Ejercicios nuevos con el mismo estilo que el examen.</p></header><section class="section">${EXTRA.map(c=>btn(`data-case="${c.id}"`,esc(c.title),`${TEMAS[c.t]} · ${c.qs.length} preguntas · ${c.qs.filter(x=>S.last[x.id]===1).length} acertadas`)).join("")}</section>`;
+  wireGo();
+  $app.querySelectorAll("[data-case]").forEach(b=>b.onclick=()=>{const c=EXTRA.find(x=>x.id===b.dataset.case); start(c.qs.map(x=>ALL[x.id]),c.title,extras)});
+}
+
+/* ================= Teoría ================= */
+function ficha(t){ t=TEMAS[t]?t:"dns";
+  $app.innerHTML=topbar("Ficha "+TEMAS[t])+`<header class="hero"><h2>Ficha de ${TEMAS[t]}</h2></header><div class="prose">${mdOf("ficha-"+t)}</div>
+  <section class="section">${btn(`data-tema-test="${t}"`,"Hacer el test de "+TEMAS[t],"",true)}</section>`;
+  wireGo();
+  $app.querySelector("[data-tema-test]").onclick=()=>start(shuffle(Q.filter(x=>x.t===t).map(x=>ALL[x.id])),"Solo "+TEMAS[t]);
+}
+function reglas(){
+  $app.innerHTML=topbar("Reglas de oro")+`<header class="hero"><h2>Reglas de oro DNS</h2><p>Repásalas antes de cada problema de caché.</p></header><div class="prose">${mdOf("reglas")}</div>
+  <section class="section">${btn('data-go="extras"',"Ponerlas en práctica","Casos extra",true)}</section>`;
+  wireGo();
+}
+
+/* ================= Tarjetas ================= */
+function tarjetas(){
+  let deck=shuffle(CARDS.map((c,i)=>i)), i=0, flipped=false;
+  const draw=()=>{
+    const c=CARDS[deck[i]];
+    $app.innerHTML=topbar((i+1)+" / "+deck.length)+`
+    <button class="flash ${flipped?"back":""}" data-act="flip" aria-live="polite">
+      <span class="label">${flipped?"Respuesta":"Pregunta · toca para girar"}</span>
+      <span class="flash-text">${esc(flipped?c[1]:c[0])}</span>
+      ${flipped?`<span class="flash-q">${esc(c[0])}</span>`:""}
+    </button>
+    <div class="row2"><button class="btn" data-act="prev" ${i===0?"disabled":""}><strong>‹ Anterior</strong></button><button class="btn primary" data-act="next"><strong>${i+1<deck.length?"Siguiente ›":"Barajar otra vez"}</strong></button></div>`;
+    wireGo();
+    $app.querySelector('[data-act="flip"]').onclick=()=>{flipped=!flipped;draw()};
+    $app.querySelector('[data-act="next"]').onclick=()=>{ if(i+1<deck.length){i++}else{deck=shuffle(deck);i=0} flipped=false; draw(); };
+    const p=$app.querySelector('[data-act="prev"]'); if(i>0) p.onclick=()=>{i--;flipped=false;draw()};
+  };
+  draw();
+}
+
+/* ================= Plan ================= */
+function plan(){
+  const tk=todayKey();
+  $app.innerHTML=topbar("Plan")+`<header class="hero"><h2>Plan hasta el lunes</h2><p>Marca lo que vayas haciendo. Miércoles y jueves están pensados para el móvil, sin conexión.</p></header>`+
+  PLAN.map(p=>`<section class="section"><span class="label ${p.d===tk?"now":""}">${esc(p.lab)}${p.d===tk?" · hoy":""}</span><div class="today">${p.items.map((it,i)=>{const k=p.d+"#"+i;return `<label class="check"><input type="checkbox" id="pl-${k}" data-plan="${k}" ${S.plan[k]?"checked":""}><span>${esc(it)}</span></label>`}).join("")}</div></section>`).join("");
+  wireGo();
+  $app.querySelectorAll("[data-plan]").forEach(c=>c.onchange=()=>{S.plan[c.dataset.plan]=c.checked;save()});
+}
+
+/* ================= Sesiones de preguntas ================= */
 let ses=null;
-function start(items,label){
-  confirmReset=false;
-  ses={label,items:items.map(it=>({...it,order:shuffle([0,1,2,3].slice(0,it.qq.o.length)),pick:null})),i:0,ok:0};
-  show();
+function start(items,label,back,exam){
+  ses={label,back:back||null,exam:!!exam,items:items.map(it=>({...it,order:shuffle([0,1,2,3].slice(0,it.qq.o.length)),pick:null})),i:0,ok:0,end:exam?Date.now()+40*60000:0};
+  show(); window.scrollTo(0,0);
+  if(exam){ timer=setInterval(()=>{const el=document.getElementById("clock"); const left=ses.end-Date.now(); if(left<=0){clearInterval(timer);timer=null;finish();return} if(el) el.textContent=fmt(left)},1000); }
+}
+function fmt(ms){const s=Math.max(0,Math.round(ms/1000));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
+function simulacro(){
+  const pick=(arr,n)=>shuffle(arr).slice(0,n);
+  const dnsT=Q.filter(x=>x.t==="dns").map(x=>ALL[x.id]);
+  const dnsC=[...BOL.filter(b=>b.t==="dns").flatMap(b=>b.qs),...EXTRA.filter(c=>c.t==="dns").flatMap(c=>c.qs)].map(x=>ALL[x.id]);
+  const ldap=poolByTema("ldap"), ftp=poolByTema("ftp");
+  const items=[...pick(dnsT,5),...pick(dnsC,7),...pick(ldap,4),...pick(ftp,4)];
+  start(shuffle(items),"Simulacro",null,true);
 }
 function show(){
   const it=ses.items[ses.i], x=it.qq, n=ses.items.length;
   const pct=Math.round(ses.i/n*100);
-  const caseBlock=it.caso?`<details class="case" open><summary>${esc(it.caso.title)}</summary><p class="intro">${esc(it.caso.intro)}</p><pre>${esc(it.caso.code)}</pre></details>`:"";
-  const answered=it.pick!==null;
+  const ctx=it.ctx?`<details class="case" ${ses.exam?"":"open"}><summary>${esc(it.ctx.title)}</summary><div class="prose">${it.ctx.html()}</div></details>`:"";
+  const answered=it.pick!==null, reveal=answered&&!ses.exam;
   const opts=it.order.map((oi,k)=>{
     let cls="opt";
-    if(answered){ if(oi===x.a) cls+=" right"; else if(oi===it.pick) cls+=" wrong"; }
+    if(reveal){ if(oi===x.a) cls+=" right"; else if(oi===it.pick) cls+=" wrong"; }
+    else if(answered && oi===it.pick) cls+=" chosen";
     return `<button class="${cls}" data-oi="${oi}" ${answered?"disabled":""}><span class="let">${L[k]}</span><span>${esc(x.o[oi])}</span></button>`;
   }).join("");
   const good=answered&&it.pick===x.a;
-  const fb=answered?`<div class="fb ${good?"":"bad"}" role="status"><b>${good?"Correcto":"No es esa. La buena: "+esc(x.o[x.a])}</b>${esc(x.e)}</div>`:"";
+  const fb=reveal?`<div class="fb ${good?"":"bad"}" role="status"><b>${good?"Correcto":"No es esa. La buena: "+esc(x.o[x.a])}</b>${esc(x.e)}</div>`:"";
   $app.innerHTML=`
   <div class="top">
-    <div class="toprow"><button class="ghost" data-act="salir">‹ Salir</button><span class="count">${ses.i+1} / ${n} · ${ses.ok} ✓</span></div>
+    <div class="toprow"><button class="ghost" data-act="salir">‹ Salir</button><span class="count">${ses.exam?`<span id="clock">${fmt(ses.end-Date.now())}</span> · `:""}${ses.i+1} / ${n}${ses.exam?"":" · "+ses.ok+" ✓"}</span></div>
     <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
   </div>
-  ${caseBlock}
+  ${ctx}
   <div class="card">
     <div><span class="chip">${TEMAS[x.t]}</span></div>
     <p class="qtext">${esc(x.q)}</p>
     <div class="opts">${opts}</div>
     ${fb}
   </div>
-  ${answered?`<button class="btn primary next" data-act="next"><strong>${ses.i+1<n?"Siguiente":"Ver resultado"}</strong><span aria-hidden="true">›</span></button>`:""}`;
-  $app.querySelector('[data-act="salir"]').onclick=home;
-  if(!answered){
-    $app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>answer(+b.dataset.oi));
-  } else {
-    const nb=$app.querySelector('[data-act="next"]'); nb.onclick=next;
-  }
+  ${answered?`<button class="btn primary next" data-act="next"><strong>${ses.i+1<n?"Siguiente":"Ver resultado"}</strong>${arrow}</button>`:""}
+  ${ses.exam&&!answered?`<button class="ghost" data-act="skip">Dejar en blanco</button>`:""}`;
+  $app.querySelector('[data-act="salir"]').onclick=()=>{ if(timer){clearInterval(timer);timer=null} ses.back?ses.back():home(); window.scrollTo(0,0); };
+  if(!answered) $app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>answer(+b.dataset.oi));
+  else $app.querySelector('[data-act="next"]').onclick=next;
+  const sk=$app.querySelector('[data-act="skip"]'); if(sk) sk.onclick=()=>{it.pick=-1; next();};
 }
 function answer(oi){
   const it=ses.items[ses.i]; if(it.pick!==null) return;
   it.pick=oi; const ok=oi===it.qq.a; if(ok) ses.ok++;
   record(it.qq.id,ok);
   const y=window.scrollY; show(); window.scrollTo(0,y);
-  const fbEl=$app.querySelector(".fb"); if(fbEl&&fbEl.scrollIntoView) fbEl.scrollIntoView({block:"nearest",behavior:"smooth"});
+  const target=$app.querySelector(".fb")||$app.querySelector('[data-act="next"]'); if(target&&target.scrollIntoView) target.scrollIntoView({block:"nearest",behavior:"smooth"});
 }
-function next(){ if(ses.i+1<ses.items.length){ses.i++;show();window.scrollTo(0,0)} else end(); }
-function end(){
+function next(){ if(ses.i+1<ses.items.length){ses.i++;show();window.scrollTo(0,0)} else finish(); }
+function finish(){
+  if(timer){clearInterval(timer);timer=null}
   const n=ses.items.length, bad=ses.items.filter(it=>it.pick!==it.qq.a);
-  const msg=ses.ok===n?"Todas bien. A por otro bloque.":ses.ok/n>=0.7?"Bien. Repasa las falladas.":"Toca repasar. Mira las explicaciones de abajo.";
-  $app.innerHTML=`
-  <header class="hero">
-    <span class="label">${esc(ses.label)}</span>
-    <div class="score">${ses.ok}/${n}</div>
-    <p>${msg}</p>
-  </header>
+  let head;
+  if(ses.exam){
+    const right=ses.ok, wrong=ses.items.filter(it=>it.pick!==null&&it.pick>=0&&it.pick!==it.qq.a).length, blank=n-right-wrong;
+    const nota=right/n*10, notaPen=Math.max(0,(right-wrong/3)/n*10);
+    if(S.best==null||nota>S.best){S.best=nota;save()}
+    const per=Object.keys(TEMAS).map(t=>{const its=ses.items.filter(i=>i.qq.t===t);const ok=its.filter(i=>i.pick===i.qq.a).length;return `<span class="k">${TEMAS[t]}</span><div class="bar" aria-hidden="true"><i style="width:${its.length?Math.round(ok/its.length*100):0}%"></i></div><span class="n">${ok}/${its.length}</span>`}).join("");
+    head=`<header class="hero"><span class="label">Simulacro</span><div class="score">${nota.toFixed(1).replace(".",",")}</div>
+      <p>${right} bien · ${wrong} mal · ${blank} en blanco. Con penalización de −1/3 por fallo: <strong>${notaPen.toFixed(1).replace(".",",")}</strong>.</p></header>
+      <section class="section"><span class="label">Por tema</span><div class="zone">${per}</div></section>`;
+  } else {
+    const msg=ses.ok===n?"Todas bien.":ses.ok/n>=0.7?"Bien. Repasa las falladas.":"Toca repasar: mira las explicaciones de abajo.";
+    head=`<header class="hero"><span class="label">${esc(ses.label)}</span><div class="score">${ses.ok}/${n}</div><p>${msg}</p></header>`;
+  }
+  $app.innerHTML=head+`
   <section class="section">
-    ${bad.length?`<button class="btn primary" data-act="rep"><strong>Repetir las ${bad.length} falladas</strong><span aria-hidden="true">›</span></button>`:""}
-    <button class="btn" data-act="home"><strong>Volver al inicio</strong><span aria-hidden="true">›</span></button>
+    ${bad.length?btn('data-act="rep"',`Repetir las ${bad.length} falladas`,"",true):""}
+    ${ses.back?btn('data-act="back"',"Volver",""):""}
+    ${btn('data-go="home"',"Volver al inicio","")}
   </section>
-  ${bad.length?`<section class="section"><span class="label">Falladas</span><div class="review">${bad.map(it=>`<div class="item"><span><span class="chip">${TEMAS[it.qq.t]}</span></span><strong>${esc(it.qq.q)}</strong><span class="ans">${esc(it.qq.o[it.qq.a])}</span><span class="exp">${esc(it.qq.e)}</span></div>`).join("")}</div></section>`:""}`;
-  $app.querySelector('[data-act="home"]').onclick=home;
-  const r=$app.querySelector('[data-act="rep"]'); if(r) r.onclick=()=>start(bad.map(it=>({qq:it.qq,caso:it.caso})),"Repetir falladas");
+  ${bad.length?`<section class="section"><span class="label">Falladas y en blanco</span><div class="review">${bad.map(it=>`<div class="item"><span><span class="chip">${TEMAS[it.qq.t]}</span>${it.ctx?` <span class="sub">${esc(it.ctx.title)}</span>`:""}</span><strong>${esc(it.qq.q)}</strong><span class="ans">${esc(it.qq.o[it.qq.a])}</span><span class="exp">${esc(it.qq.e)}</span></div>`).join("")}</div></section>`:""}`;
+  wireGo();
+  const r=$app.querySelector('[data-act="rep"]'); if(r) r.onclick=()=>start(bad.map(it=>({qq:it.qq,ctx:it.ctx})),"Repetir falladas",ses.back);
+  const bk=$app.querySelector('[data-act="back"]'); if(bk) bk.onclick=()=>{ses.back();window.scrollTo(0,0)};
   window.scrollTo(0,0);
 }
 
@@ -485,7 +1826,7 @@ document.addEventListener("keydown",e=>{
 
 home();
 if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}
-</script>
 
+</script>
 </body>
 </html>
