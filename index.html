@@ -138,6 +138,21 @@ details.case .prose{margin-top:8px}
 .flash-text{font-family:var(--f-display);font-size:1.5rem;font-weight:800;line-height:1.25;text-wrap:balance}
 .flash-q{color:var(--muted);font-size:.9rem}
 .hero h2{font-size:1.6rem}
+
+/* Resolver por escrito */
+.sub{color:var(--muted);font-size:.875rem}
+.note{margin-top:16px;padding:12px 14px;border-radius:12px;background:var(--accent-soft);color:var(--fg);font-size:.92rem}
+textarea.answer{width:100%;min-height:260px;resize:vertical;font-family:var(--f-mono);font-size:.85rem;line-height:1.55;color:var(--fg);
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+textarea.answer:focus{outline:3px solid var(--accent);outline-offset:1px}
+pre.mine{white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+.card-lite.stack{gap:10px}
+.grade{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:4px}
+.gbtn{padding:10px 6px;border-radius:10px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-weight:700;min-height:44px}
+.gbtn.on[data-v="1"]{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.gbtn.on[data-v="0.5"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.gbtn.on[data-v="0"]{background:var(--ko-soft);border-color:var(--ko);color:var(--ko)}
+.pscore{color:var(--muted)}
 </style>
 </head>
 <body>
@@ -313,6 +328,16 @@ Autoritativa si responde un servidor **de la zona** (primario o secundario). Si 
 - SOA con un primario que no aparece en los NS.
 - Erratas entre el NS y su A (severA ≠ serverA).
 - Un espacio dentro de un nombre ("serverd. enero…").
+
+## 12. Cómo redactarlo en el examen
+- **Resolución:** una línea por mensaje, con el formato *n. Origen → Destino (recursiva o iterativa): pregunta → respuesta (NS + A, o A final)*.
+- **Caché:** en formato de registro, `nombre TTL IN TIPO valor`, una pareja NS + A por cada nivel y la respuesta final.
+- **Añadir algo:** "En la zona X (servidor Y) se añade:" y debajo los RR completos, con punto final.
+- **Tiempos:** justifica siempre con números. Por ejemplo: "el NS de fedempes (800) sigue vivo en t = 700, así que…".
+- **Nombres o IP que no te dan:** server_xxxx, IP_server_xxxx o dnsp_zona, según lo que pida el enunciado.
+- **¿Autoritativa?** Di quién responde y por qué es o no dueño de la zona.
+- **LDAP:** dibuja el DIT con el RDN en cada nodo y la clase entre paréntesis. Justifica la unicidad del RDN entre hermanos.
+- **TFTP:** una línea por mensaje, `C → S  WRQ [02 | fichero | 0 | modo | 0]`, y señala el último DATA diciendo por qué lo es.
 </script>
 
 <!-- ===================== BOLETÍN: ENUNCIADOS Y SOLUCIONES ===================== -->
@@ -1202,6 +1227,150 @@ El secundario (domser) tarda hasta el **Refresh = 60000 s** en copiar el cambio,
 Además, el correo se entrega primero a **mdam.otro.dominio.es** (prioridad 15 < 40).
 </script>
 
+<!-- ===================== PREGUNTAS DE CADA PROBLEMA ===================== -->
+<script type="text/markdown" id="pre-2.1">
+- **a)** Diseña el DIT con total libertad de esquema: define una clase para cada nodo y los atributos de cada clase.
+- **b)** ¿Cuál es el RDN de un nodo que representa el teléfono de un trabajador en el directorio corporativo?
+- **c)** ¿Cuál es el DN en el corporativo de "Octavio Rivera", con teléfono 954552789?
+</script>
+<script type="text/markdown" id="pre-2.2">
+- **a)** ¿Permite este DIT almacenar un histórico de los records de cada prueba?
+- **b)** ¿Podría un record estar compartido por dos atletas?
+- **c)** ¿Qué tipo de objeto es "Carreras"? ¿Para qué sirve?
+- **d)** Bruno Hortelano es el plusmarquista de 100, 200 y 400 m. ¿Cuántas hojas hay que consultar como mínimo para obtener toda su información?
+</script>
+<script type="text/markdown" id="pre-2.3">
+- **a)** ¿Qué profundidad tendrá como mínimo el DIT? La raíz ocupa el primer nivel.
+- **b)** ¿Se podrá crear una entrada nueva para "Octavio Rivera" en Medicina?
+- **c)** ¿Qué tipo de objeto será "Informática"?
+- **d)** Al consultar por "Octavio Rivera", el cliente recibe un referral con el valor 130.23.2.45. ¿Qué significa?
+</script>
+<script type="text/markdown" id="pre-2.4">
+- **a)** Representa el DIT indicando el RDN de cada nivel.
+- **b)** ¿Se podría guardar la URL de la web oficial de la ETSI Informática? Si sí, ¿en qué entrada y con qué atributo? Si no, ¿por qué?
+- **c)** ¿Se podría añadir al profesor "Oscar Rivera", de Tecnología Electrónica, con correo orivera@us.es?
+- **d)** ¿Cuántas DSA se han consultado como mínimo? ¿Qué tipo de atributo es creatorsName?
+</script>
+<script type="text/markdown" id="pre-2.5">
+- **a)** Dibuja el DIT con el RDN de cada nivel (raíz fe.es.).
+- **b)** ¿Qué clase de objeto es "Baloncesto"? ¿Y "Rafael Nadal"?
+- **c)** ¿Se podría añadir un nuevo atleta llamado "Marco Rufo"?
+</script>
+<script type="text/markdown" id="pre-2.6">
+- **a)** Representa el DIT e indica la clase de objeto de cada elemento.
+- **b)** ¿Cuál sería el RDN de los empleados? ¿Y el DN del director? Razónalo.
+- **c)** Hay un Luis Expósito en Investigación y otro en Administración. ¿Cuál sería el RDN de cada uno?
+</script>
+<script type="text/markdown" id="pre-2.7">
+- **a)** Define un esquema de datos para almacenar la información de los animales.
+- **b)** Dibuja el DIT de la CAAC con algunos ejemplos.
+- **c)** ¿Podría una misma persona ser dueña o madrina de dos o más perros?
+</script>
+<script type="text/markdown" id="pre-2.8">
+- **a)** Diseña el DIT indicando el RDN y los atributos de cada nivel.
+- **b)** Pon un ejemplo de DN de un profesor y de una asignatura, indicando el esquema.
+- **c)** ¿Cómo incluirías una valoración de la dificultad de la asignatura y otra del profesor?
+</script>
+<script type="text/markdown" id="pre-3.1">
+- Escribe todos los mensajes intercambiados entre cliente y servidor, con sus campos.
+</script>
+<script type="text/markdown" id="pre-3.2">
+- Indica todos los errores del cronograma.
+</script>
+<script type="text/markdown" id="pre-3.3">
+- **a)** ¿Qué protocolo de transporte usa TFTP? ¿A qué puerto se conecta?
+- **b)** Dibuja el intercambio de mensajes con el tipo y el contenido de los campos de cada uno. Marca con un asterisco el último DATA y explica cómo sabes que es el último.
+</script>
+<script type="text/markdown" id="pre-4.1">
+- **a)** Representa la jerarquía DNS en un árbol.
+- **b)** ¿Cuántas zonas DNS hay? Indica el tipo y la IP de los servidores DNS.
+- **c.1)** Representa las peticiones y respuestas DNS, con el tipo de consulta de cada paso.
+- **c.2)** ¿Qué guarda en caché el servidor al que preguntó el cliente?
+- **c.3)** ¿Y el resto de servidores implicados?
+- **d)** Se añade fisica.us.es. (DNS 150.214.8.10, correo 150.214.8.11). ¿Qué RR hay que añadir y dónde?
+</script>
+<script type="text/markdown" id="pre-4.2">
+- **a)** Representa la jerarquía DNS en un gráfico.
+- **b)** Identifica las zonas bajo .com (incluida): nombre e IP de sus servidores, y su tipo si son DNS (usa server_xxxx e IP_server_xxxx si no los conoces).
+- **c)** ¿Quién resuelve la petición sobre coco.labcom.org? ¿Qué tiene la base de datos del primario de org?
+- **d)** Se añade arquitectura.europa.es. (DNS dns_ar 10.0.200.12, correo correoar 10.0.201.11). ¿Dónde y qué RR?
+- **e)** Haile.docsis.finantial.com consulta www.informatica.us.es con su DNS 100.10.12.2. Representa la consulta. ¿Qué se guarda en la caché de ese servidor?
+- **f)** ¿Qué pila de protocolos usa Haile en la petición a su DNS? ¿Cómo se identifica al cliente en cada nivel?
+</script>
+<script type="text/markdown" id="pre-4.3">
+- **a)** ¿Cuántos servidores DNS primarios hay? ¿Cuántos TLD?
+- **b)** pc12.otrodominio.down.org consulta correo.rusia.asia. a través de dnsp_default: ¿cuál es el FQDN del DNS por defecto? Representa y explica la resolución. ¿Qué servidores guardan caché y qué guardan? ¿Cómo se resuelve después www.pekin.china.asia.?
+- **c)** ¿Se podría añadir fcd.paris.france.eu., que administra el servidor de correo mail.fcd.paris.france.eu.? ¿Qué información hay que añadir y dónde?
+</script>
+<script type="text/markdown" id="pre-4.4">
+- **a)** Representa la jerarquía DNS.
+- **b)** Diagrama de la consulta sobre fileserver.ict.norut.no. desde pcA con dnsp_default.
+- **c)** ¿Qué servidor guarda caché? ¿Qué guarda?
+- **d)** Con esa caché, diagrama de la consulta sobre fileserver.ht.norut.no.
+- **e)** ¿Qué hay que añadir para el servidor de impresión print.rob.chiba.jp.? ¿Dónde?
+- **f)** ¿Y para correo.soc.chiba.jp., que da correo a ict.norut.no.? ¿Dónde?
+- **g)** ¿Se podría crear el dominio mail.norut.no.?
+- **h)** Secundarios: dnss1.kyoto.jp. para cnm.es. y dnss2.norut.no. para norut.no. 1) ¿Qué información se ha añadido y dónde? 2) ¿Quién contesta www.cnm.es.? ¿Y www.norut.no.? 3) ¿Cambia algo si caen todos los servidores bajo cnm.es.?
+</script>
+<script type="text/markdown" id="pre-4.5">
+- **a)** Representa la jerarquía DNS.
+- **b)** Gráfico de la consulta iterativa sobre super.empleados.arcompany.com. desde miestación.mired.es. a través de miserver.mired.es.: elementos, orden y contenido de los mensajes.
+- **c)** Si todos pueden tener caché, ¿quién guarda información y cuál?
+- **d)** Si todos los servidores bajo empleados.arcompany.com. estuvieran apagados, ¿se habría resuelto la consulta?
+</script>
+<script type="text/markdown" id="pre-4.6">
+- **a)** ¿Es autoritativo el servidor que contesta al cliente? ¿Cuál es su IP?
+- **b)** ¿Qué pidió el cliente?
+- **c)** Hostnames de los primarios de los dominios implicados.
+- **d)** ¿Se puede saber si hay servidor de correo para fedempes.com.?
+- **e)** A los 100 s se consulta star.miempresa.fedempes.com. ¿Cuántos DNS intervienen? Indica sus FQDN.
+- **f)** ¿Ha cambiado la caché tras el apartado e?
+- **g)** 600 s después del apartado e, ¿se resuelve www.fedempes.com. sin la raíz?
+- **h)** Con los DNS de com apagados (y sin el apartado g): ¿se resuelve www.miempresa.fedempes.com. a los 1000 s? ¿Y a los 1500 s?
+</script>
+<script type="text/markdown" id="pre-4.7">
+- **a)** Se escribe desde octavio@dte.us.es al administrador de la zona. 1) ¿A qué dirección? 2) ¿Le llega?
+- **b)** Indica los errores de configuración de la zona.
+- **c)** Al inicio, cada PC pregunta por www.teo.atr1.edu. 1) ¿Reciben respuesta? 2) ¿Es autoritativa?
+- **d)** 1500 s después se apagan los servidores de edu y el PC A pregunta server2.teo.atr1.edu. ¿Se resuelve? Explica el procedimiento.
+- **e)** edu vuelve a los 2000 s. A los 9500 s, el PC B pregunta nuevoserver.teo.atr1.edu. A los 20000 s se añade su A en thor. ¿En qué instante mínimo puede conectar el PC B?
+</script>
+<script type="text/markdown" id="pre-4.8">
+- **a)** ¿Es autoritativo para tecnoatr.com el servidor que responde al cliente?
+- **b)** ¿Cuál es la IP del principal de nationalcom.gr.?
+- **c)** Gráfico del procedimiento: tipo de consulta, hostnames, orden y contenido de los mensajes.
+- **d)** Con la caché actual, ¿se resuelve test-server.gr. sin pasar por la raíz? ¿Y a los 1800 s?
+- **e)** A los 1800 s se pregunta gorillaz.tic.nationalcom.gr. ¿Cuántos DNS intervienen? FQDN y caché resultante.
+- **f)** ¿Qué hay que añadir para obtener el FQDN de 100.10.10.10?
+- **g)** Tras pedir toda la información de tecnoatr.com, cambia la IP de feder.tecnoatr.com. ¿Cuánto debe esperar desktop087? Valor exacto.
+</script>
+<script type="text/markdown" id="pre-4.9">
+- **a)** ¿Cuál es el FQDN consultado?
+- **b)** Sobre el DNS por defecto: 1) ¿Es autoritativo? 2) ¿Su IP? 3) ¿Qué hay que añadir para obtener su nombre a partir de su IP?
+- **c)** Gráfico desde que el cliente envía la consulta hasta que kanto responde: FQDN, contenido y tipo de consulta.
+- **d)** ¿Se podría crear el alias salamandra.espuma.pk. de charmander.fuego.pk.? ¿Qué entradas?
+- **e)** Segunda consulta sobre charmilion.fuego.pk.: ¿hay respuesta? ¿Es autoritativa? ¿Cuántos DNS? Casos: 1) 1500 s, misma estación; 2) 4000 s, DNS 100.20.1.23; 3) 3000 s, DNS 3.2.3.7; 4) 6000 s, DNS 9.78.3.4; 5) 3800 s, DNS 16.6.74.23.
+- **f)** Tiempo máximo para resolver charmander.fuego.pk. desde la misma estación si se apagan: 1) 9.0.0.0/8; 2) 100.0.0.0/8; 3) 130.0.0.0/8.
+</script>
+<script type="text/markdown" id="pre-4.10">
+- **a)** ¿Por qué se ha recibido esta respuesta? ¿Cómo se soluciona?
+- **b)** Arreglado el problema, ¿cuánto hay que esperar como mínimo para obtener la IP desde maqusu?
+- **c)** ¿Cambia la respuesta si el cliente usa como DNS 120.20.2.75?
+- **d)** A los 5300 s, www.phipe.i3us.edu. devuelve 190.1.3.32. ¿Qué RR añade a su caché el DNS por defecto?
+- **e)** ¿Qué otros RR habrá en el mapa del primario de uxDpto?
+</script>
+<script type="text/markdown" id="pre-4.11">
+- **a)** ¿Qué información guarda defaultserver en su caché? Usa el formato IP_XXX.
+- **b)** ¿Se podría crear ahora el alias seudo.enero.examen.atr1.edu. de mail.enero.examen.atr1.edu.? Si sí, ¿qué se añade? Si no, ¿qué tiene que pasar?
+- **c)** ¿Qué hay que añadir para obtener el FQDN de 180.2.33.2? ¿Dónde?
+</script>
+<script type="text/markdown" id="pre-4.12">
+- **a)** ¿Recibe respuesta el cliente? ¿Es autoritativa? Con DNS por defecto 1) 140.21.2.33; 2) 100.10.3.2; 3) 100.10.34.5.
+- **b)** Con el primario apagado, se pregunta sftpd con el DNS 100.10.10.10 (caché vacía): 1) ¿Qué hay en su caché tras resolver? 2) ¿Cómo se resuelve sermail 4500 s después?
+- **c)** ¿Qué hay que añadir para obtener el FQDN de 180.2.33.2? ¿Dónde?
+- **d)** El correo pasa a 220.21.2.4. ¿Cuánto hay que esperar como máximo?
+</script>
+
 <script>
 /* ================= Datos ================= */
 function q(id,t,text,opts,e){return {id,t,q:text,o:opts.map(s=>s.replace(/^\*/,"")),a:opts.findIndex(s=>s.startsWith("*")),e}}
@@ -1546,12 +1715,12 @@ const CARDS=[
 
 /* Plan de estudio */
 const PLAN=[
-{d:"2026-11-03",lab:"Mar 3",items:["Instalar la app y abrirla con internet","Leer las reglas de oro de DNS","Hacer un test rápido"]},
-{d:"2026-11-04",lab:"Mié 4 · viaje",items:["Ficha de DNS","Todas las tarjetas","Test solo DNS"]},
-{d:"2026-11-05",lab:"Jue 5 · viaje",items:["Boletín 4.6 y 4.9 (practicar y leer la solución)","Caso extra: cuenta atrás de TTL","Repasar fallos"]},
-{d:"2026-11-06",lab:"Vie 6",items:["Boletín 4.1, 4.2, 4.3 y 4.5","Boletín 4.4","Test rápido"]},
-{d:"2026-11-07",lab:"Sáb 7",items:["Boletín 4.7 y 4.8","Boletín 4.10, 4.11 y 4.12","Caso extra: busca los errores en la zona"]},
-{d:"2026-11-08",lab:"Dom 8",items:["Ficha LDAP + boletín 2.1 a 2.8","Ficha TFTP/FTP + boletín 3.1 a 3.3","Simulacro completo","Repasar fallos"]},
+{d:"2026-11-03",lab:"Mar 3",items:["Instalar la app y abrirla con internet","Leer las reglas de oro de DNS (con la parte de cómo redactar)","Resolver por escrito el 4.1"]},
+{d:"2026-11-04",lab:"Mié 4 · viaje",items:["Ficha de DNS","Generador de problemas DNS: 3 rondas","Tarjetas"]},
+{d:"2026-11-05",lab:"Jue 5 · viaje",items:["Resolver por escrito el 4.6 y corregirlo","Resolver por escrito el 4.9 y corregirlo","Generador de problemas DNS: 3 rondas"]},
+{d:"2026-11-06",lab:"Vie 6",items:["Por escrito: 4.5 y 4.4","Practicar con preguntas: 4.2 y 4.3","Caso extra: busca los errores en la zona"]},
+{d:"2026-11-07",lab:"Sáb 7",items:["Por escrito: 4.7 y 4.10","Por escrito: 4.8 o 4.12","Practicar con preguntas: 4.11"]},
+{d:"2026-11-08",lab:"Dom 8",items:["Ficha LDAP + por escrito 2.1 y 2.4","Ficha TFTP/FTP + por escrito 3.2","Examen de desarrollo completo","Repasar fallos"]},
 {d:"2026-11-09",lab:"Lun 9 · examen",items:["Reglas de oro y tarjetas antes de entrar"]}
 ];
 
@@ -1566,10 +1735,11 @@ const poolByTema=t=>Object.values(ALL).filter(it=>it.qq.t===t);
 
 /* ================= Progreso ================= */
 const KEY="atr1-repaso-v1";
-let S={last:{},wrong:[],plan:{},best:null};
-try{const raw=localStorage.getItem(KEY); if(raw){const p=JSON.parse(raw); if(p&&p.last) S={last:p.last||{},wrong:Array.isArray(p.wrong)?p.wrong:[],plan:p.plan||{},best:p.best??null};}}catch(e){}
+const EMPTY=()=>({last:{},wrong:[],plan:{},best:null,ans:{},dev:{},bestDev:null});
+let S=EMPTY();
+try{const raw=localStorage.getItem(KEY); if(raw){const p=JSON.parse(raw); if(p&&p.last) S=Object.assign(EMPTY(),p,{wrong:Array.isArray(p.wrong)?p.wrong:[]});}}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function record(id,ok){S.last[id]=ok?1:0; S.wrong=S.wrong.filter(x=>x!==id); if(!ok) S.wrong.push(id); save();}
+function record(id,ok){ if(!ALL[id]) return; S.last[id]=ok?1:0; S.wrong=S.wrong.filter(x=>x!==id); if(!ok) S.wrong.push(id); save();}
 
 /* ================= Utilidades ================= */
 const $app=document.getElementById("app");
@@ -1604,7 +1774,7 @@ let timer=null;
 function go(view,arg){
   if(timer){clearInterval(timer);timer=null}
   confirmReset=view==="home"?confirmReset:false;
-  ({home,boletin,problema,ficha,reglas,tarjetas,plan,extras}[view]||home)(arg);
+  ({home,boletin,problema,ficha,reglas,tarjetas,plan,extras,generador,escrito}[view]||home)(arg);
   window.scrollTo(0,0);
 }
 
@@ -1632,8 +1802,14 @@ function home(){
   </section>
   ${todayHtml}
   <section class="section">
-    <span class="label">Practicar</span>
-    ${btn('data-act="simulacro"',"Simulacro de examen","20 preguntas · 40 minutos · nota sobre 10",true)}
+    <span class="label">Como en el examen (desarrollo)</span>
+    ${btn('data-act="examen"',"Examen de desarrollo","4 problemas · 90 min · te corriges con la solución"+(S.bestDev!=null?" · mejor: "+S.bestDev.toFixed(1).replace(".",","):""),true)}
+    ${btn('data-go="generador"',"Generador de problemas DNS","Cachés y TTL nuevos cada vez, sin fin")}
+    ${btn('data-go="boletin"',"Resolver por escrito","Cualquier problema del boletín, con corrección")}
+  </section>
+  <section class="section">
+    <span class="label">Practicar con preguntas</span>
+    ${btn('data-act="simulacro"',"Test de repaso","20 preguntas · 40 minutos · nota sobre 10")}
     ${btn('data-act="rapido"',"Test rápido","10 preguntas mezcladas")}
     <div class="grid3">${Object.keys(TEMAS).map(t=>`<button class="btn small" data-tema="${t}"><strong>${TEMAS[t]}</strong></button>`).join("")}</div>
     ${btn('data-act="fallos" '+(nw?"":"disabled"),"Repasar fallos",nw?nw+" preguntas falladas":"Aún no has fallado ninguna")}
@@ -1641,7 +1817,7 @@ function home(){
   </section>
   <section class="section">
     <span class="label">Boletín de problemas</span>
-    ${btn('data-go="boletin"',"Boletín resuelto","Los 23 problemas: practicar y leer la solución")}
+    ${btn('data-go="boletin"',"Boletín resuelto","Los 23 problemas: por escrito, con preguntas y con la solución")}
     ${btn('data-go="extras"',"Casos extra","4 ejercicios nuevos estilo examen")}
   </section>
   <section class="section">
@@ -1660,13 +1836,14 @@ function home(){
   $app.querySelectorAll("[data-tema]").forEach(b=>b.onclick=()=>{const t=b.dataset.tema; start(shuffle(Q.filter(x=>x.t===t).map(x=>ALL[x.id])),"Solo "+TEMAS[t])});
   $app.querySelector('[data-act="rapido"]').onclick=()=>start(shuffle(Q.map(x=>ALL[x.id])).slice(0,10),"Test rápido");
   $app.querySelector('[data-act="simulacro"]').onclick=simulacro;
+  $app.querySelector('[data-act="examen"]').onclick=examenDesarrollo;
   const fb=$app.querySelector('[data-act="fallos"]'); if(nw) fb.onclick=()=>start(shuffle(S.wrong.filter(id=>ALL[id]).map(id=>ALL[id])),"Repaso de fallos");
-  $app.querySelector('[data-act="reset"]').onclick=()=>{ if(confirmReset){S={last:{},wrong:[],plan:{},best:null};save();confirmReset=false;} else confirmReset=true; home(); };
+  $app.querySelector('[data-act="reset"]').onclick=()=>{ if(confirmReset){S=EMPTY();save();confirmReset=false;} else confirmReset=true; home(); };
 }
 
 /* ================= Boletín ================= */
 function boletin(){
-  const group=(t,label)=>`<section class="section"><span class="label">${label}</span>${BOL.filter(b=>b.t===t).map(b=>btn(`data-go="problema" data-arg="${b.id}"`,`${b.id} · ${esc(b.title)}`,`Dificultad ${String(b.d).replace(".",",")}/10 · ${bolProgress(b)}/${b.qs.length} acertadas`)).join("")}</section>`;
+  const group=(t,label)=>`<section class="section"><span class="label">${label}</span>${BOL.filter(b=>b.t===t).map(b=>btn(`data-go="problema" data-arg="${b.id}"`,`${b.id} · ${esc(b.title)}`,`Dificultad ${String(b.d).replace(".",",")}/10 · ${bolProgress(b)}/${b.qs.length} acertadas${S.dev[b.id]!=null?" · por escrito: "+S.dev[b.id].toFixed(1).replace(".",","):""}`)).join("")}</section>`;
   $app.innerHTML=topbar("Boletín")+`<header class="hero"><h2>Boletín resuelto</h2><p>Practica cada problema con preguntas y luego lee la solución completa.</p></header>`+
    group("dns","DNS (tema 4 del boletín)")+group("ldap","LDAP (tema 2 del boletín)")+group("ftp","TFTP (tema 3 del boletín)");
   wireGo();
@@ -1676,7 +1853,9 @@ function problema(id){
   $app.innerHTML=`<div class="top"><div class="toprow"><button class="ghost" data-go="boletin">‹ Boletín</button><span class="count">${b.id} · ${TEMAS[b.t]}</span></div></div>
   <header class="hero"><h2>${b.id} · ${esc(b.title)}</h2><p>Dificultad ${String(b.d).replace(".",",")}/10 · ${bolProgress(b)}/${b.qs.length} acertadas</p></header>
   <section class="section"><span class="label">Enunciado</span><div class="prose card-lite">${mdOf("enu-"+b.id)}</div></section>
-  <section class="section">${btn('data-act="practicar"',"Practicar este problema",b.qs.length+" preguntas",true)}
+  <section class="section"><span class="label">Preguntas</span><div class="prose card-lite">${mdOf("pre-"+b.id)}</div></section>
+  <section class="section">${btn(`data-go="escrito" data-arg="${b.id}"`,"Resolver por escrito","Escribe tu respuesta y corrígete apartado por apartado"+(S.dev[b.id]!=null?" · última nota "+S.dev[b.id].toFixed(1).replace(".",","):""),true)}
+  ${btn('data-act="practicar"',"Practicar con preguntas",b.qs.length+" preguntas tipo test")}
   <button class="btn" data-act="sol" aria-expanded="false"><strong>Ver solución completa</strong>${arrow}</button></section>
   <section class="section" id="sol" hidden><span class="label">Solución</span><div class="prose card-lite">${mdOf("sol-"+b.id)}</div></section>`;
   wireGo();
@@ -1806,7 +1985,7 @@ function finish(){
   $app.innerHTML=head+`
   <section class="section">
     ${bad.length?btn('data-act="rep"',`Repetir las ${bad.length} falladas`,"",true):""}
-    ${ses.back?btn('data-act="back"',"Volver",""):""}
+    ${ses.back?btn('data-act="back"',ses.backLabel||"Volver","",!bad.length):""}
     ${btn('data-go="home"',"Volver al inicio","")}
   </section>
   ${bad.length?`<section class="section"><span class="label">Falladas y en blanco</span><div class="review">${bad.map(it=>`<div class="item"><span><span class="chip">${TEMAS[it.qq.t]}</span>${it.ctx?` <span class="sub">${esc(it.ctx.title)}</span>`:""}</span><strong>${esc(it.qq.q)}</strong><span class="ans">${esc(it.qq.o[it.qq.a])}</span><span class="exp">${esc(it.qq.e)}</span></div>`).join("")}</div></section>`:""}`;
@@ -1814,6 +1993,132 @@ function finish(){
   const r=$app.querySelector('[data-act="rep"]'); if(r) r.onclick=()=>start(bad.map(it=>({qq:it.qq,ctx:it.ctx})),"Repetir falladas",ses.back);
   const bk=$app.querySelector('[data-act="back"]'); if(bk) bk.onclick=()=>{ses.back();window.scrollTo(0,0)};
   window.scrollTo(0,0);
+}
+
+
+/* ================= Resolver por escrito ================= */
+let dv=null;
+function sections(id){
+  const el=document.getElementById(id); const src=el?el.textContent:""; const out=[]; let cur={t:"Solución",l:[]}, inPre=false;
+  for(const line of src.split("\n")){
+    if(line.trim().startsWith("```")) inPre=!inPre;
+    if(!inPre && line.trim().startsWith("## ")){ if(cur.l.join("").trim()) out.push(cur); cur={t:line.trim().slice(3),l:[]}; }
+    else cur.l.push(line);
+  }
+  if(cur.l.join("").trim()) out.push(cur);
+  return out.map(x=>({t:x.t,html:md(x.l.join("\n"))}));
+}
+function escrito(id){ const b=BOL.find(x=>x.id===id); if(!b) return boletin(); devStart([id],"Problema "+id,0,()=>{problema(id);window.scrollTo(0,0)}); }
+function examenDesarrollo(){
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
+  const ids=[pick(["4.1","4.2","4.3","4.4","4.5"]),pick(["4.6","4.7","4.8","4.9","4.10","4.11","4.12"]),pick(["2.1","2.2","2.3","2.4","2.5","2.6","2.7","2.8"]),pick(["3.1","3.2","3.3"])];
+  devStart(ids,"Examen de desarrollo",90,null);
+}
+function devStart(ids,label,minutes,back){
+  if(timer){clearInterval(timer);timer=null}
+  dv={ids,label,i:0,end:minutes?Date.now()+minutes*60000:0,back,grades:{},exam:ids.length>1};
+  devShow(); window.scrollTo(0,0);
+  if(minutes) timer=setInterval(()=>{const left=dv.end-Date.now(); const el=document.getElementById("clock"); if(left<=0){clearInterval(timer);timer=null;devCorrect();return} if(el) el.textContent=fmt(left)},1000);
+}
+function devExit(){ if(timer){clearInterval(timer);timer=null} dv.back?dv.back():home(); window.scrollTo(0,0); }
+function devShow(){
+  const id=dv.ids[dv.i], b=BOL.find(x=>x.id===id), n=dv.ids.length;
+  $app.innerHTML=`<div class="top"><div class="toprow"><button class="ghost" data-act="salir">‹ Salir</button><span class="count">${dv.end?`<span id="clock">${fmt(dv.end-Date.now())}</span> · `:""}${n>1?"Problema "+(dv.i+1)+" / "+n:esc(dv.label)}</span></div>${n>1?`<div class="bar" aria-hidden="true"><i style="width:${Math.round(dv.i/n*100)}%"></i></div>`:""}</div>
+  ${dv.exam&&dv.i===0?`<p class="note">Reparto supuesto: dos problemas de DNS, uno de LDAP y uno de TFTP. Si prefieres hacerlo en papel, deja la caja vacía y pasa a corregir.</p>`:""}
+  <header class="hero"><span class="label">${TEMAS[b.t]} · problema ${b.id}</span><h2>${esc(b.title)}</h2></header>
+  <section class="section"><span class="label">Enunciado</span><div class="prose card-lite">${mdOf("enu-"+id)}</div></section>
+  <section class="section"><span class="label">Preguntas</span><div class="prose card-lite">${mdOf("pre-"+id)}</div></section>
+  <section class="section"><label class="label" for="ans-${id}">Tu respuesta</label>
+    <textarea id="ans-${id}" class="answer" placeholder="a) …&#10;b) …" spellcheck="false" autocapitalize="off">${esc(S.ans[id]||"")}</textarea>
+    <span class="sub">Se guarda sola en este dispositivo.</span></section>
+  <div class="row2">${dv.i>0?`<button class="btn" data-act="prev"><strong>‹ Anterior</strong></button>`:`<span></span>`}
+    <button class="btn primary" data-act="next"><strong>${dv.i+1<n?"Siguiente problema ›":"Corregir ›"}</strong></button></div>`;
+  const ta=document.getElementById("ans-"+id); let tmo=null;
+  ta.addEventListener("input",()=>{S.ans[id]=ta.value; clearTimeout(tmo); tmo=setTimeout(save,400)});
+  $app.querySelector('[data-act="salir"]').onclick=()=>{S.ans[id]=ta.value;save();devExit()};
+  $app.querySelector('[data-act="next"]').onclick=()=>{S.ans[id]=ta.value;save(); if(dv.i+1<n){dv.i++;devShow();window.scrollTo(0,0)} else devCorrect();};
+  const pv=$app.querySelector('[data-act="prev"]'); if(pv) pv.onclick=()=>{S.ans[id]=ta.value;save();dv.i--;devShow();window.scrollTo(0,0)};
+}
+function devCorrect(){
+  if(timer){clearInterval(timer);timer=null}
+  const G=[["1","Bien"],["0.5","A medias"],["0","Mal"]];
+  const blocks=dv.ids.map(id=>{
+    const b=BOL.find(x=>x.id===id), secs=sections("sol-"+id); dv.grades[id]=dv.grades[id]||{};
+    return `<section class="section"><span class="label">${TEMAS[b.t]} · problema ${b.id} · ${esc(b.title)}</span>
+      <div class="card-lite stack"><span class="label">Tu respuesta</span>${(S.ans[id]||"").trim()?`<pre class="mine">${esc(S.ans[id])}</pre>`:`<p class="sub">No escribiste nada aquí. Compara con lo que hayas hecho en papel.</p>`}</div>
+      ${secs.map((sec,k)=>`<div class="card-lite stack"><h3>${inl(sec.t)}</h3><div class="prose">${sec.html}</div>
+        <div class="grade" role="group" aria-label="¿Cómo te ha salido ${esc(sec.t)}?">${G.map(([v,l])=>`<button class="gbtn ${dv.grades[id][k]===+v?"on":""}" data-p="${id}" data-k="${k}" data-v="${v}">${l}</button>`).join("")}</div></div>`).join("")}
+      <p class="pscore" id="ps-${id.replace(".","-")}"></p></section>`;
+  }).join("");
+  $app.innerHTML=`<div class="top"><div class="toprow"><button class="ghost" data-act="salir">‹ Salir</button><span class="count">Corrección</span></div></div>
+  <header class="hero"><span class="label">${esc(dv.label)}</span><div class="score" id="total">–</div><p>Compara cada apartado con tu respuesta y marca cómo te ha salido. Sé exigente: si falta la justificación, es "a medias".</p></header>
+  ${blocks}
+  <section class="section">${dv.back?btn('data-act="back"',"Volver al problema",""):""}${btn('data-go="home"',"Volver al inicio","")}</section>`;
+  wireGo();
+  $app.querySelector('[data-act="salir"]').onclick=devExit;
+  const bk=$app.querySelector('[data-act="back"]'); if(bk) bk.onclick=devExit;
+  $app.querySelectorAll(".gbtn").forEach(g=>g.onclick=()=>{dv.grades[g.dataset.p][+g.dataset.k]=+g.dataset.v;
+    g.parentElement.querySelectorAll(".gbtn").forEach(x=>x.classList.toggle("on",x===g)); devScore();});
+  devScore(); window.scrollTo(0,0);
+}
+function devScore(){
+  let notas=[];
+  dv.ids.forEach(id=>{const n=sections("sol-"+id).length, g=dv.grades[id]||{}, k=Object.keys(g).length, el=document.getElementById("ps-"+id.replace(".","-"));
+    if(k===n){const nota=Object.values(g).reduce((a,b)=>a+b,0)/n*10; notas.push(nota); S.dev[id]=nota; if(el) el.innerHTML=`Nota del problema: <strong>${nota.toFixed(1).replace(".",",")}</strong>`;}
+    else if(el) el.textContent=`${k} de ${n} apartados corregidos`;});
+  const tot=document.getElementById("total");
+  if(notas.length===dv.ids.length){const m=notas.reduce((a,b)=>a+b,0)/notas.length; tot.textContent=m.toFixed(1).replace(".",","); if(dv.exam&&(S.bestDev==null||m>S.bestDev)) S.bestDev=m;}
+  else tot.textContent="–";
+  save();
+}
+
+/* ================= Generador de problemas DNS ================= */
+function generador(){
+  const R=a=>a[Math.floor(Math.random()*a.length)], rt=(a,b)=>100*(Math.floor(a/100)+Math.floor(Math.random()*((b-a)/100+1)));
+  const tld=R(["com","net","es","eu","gr","pk","edu","jp"]), dom=R(["fedempes","ocio","norut","arcomp","teleco","mares","tecno","sierra","kanto","rioja"]), sub=R(["ventas","lab","tic","empleados","campus","info","docs"]);
+  const ext=tld==="org"?"net":"org";
+  const T=tld+".", D=dom+"."+T, SB=sub+"."+D, H="www."+SB;
+  const nsT="a.nic."+T, nsD1="dns."+D, nsD2="ns2.externo."+ext+".", nsS="srv."+SB;
+  const ip=()=>40+"."+(1+Math.floor(Math.random()*250))+"."+(1+Math.floor(Math.random()*250))+"."+(1+Math.floor(Math.random()*250));
+  const E={nsT:rt(800,2000),aT:rt(2000,5000),nsD1:rt(600,2500),nsD2:rt(600,2500),aD1:rt(800,4000),aD2:rt(800,4000),nsS:rt(500,2000),aS:rt(800,3000),aH:rt(300,1500)};
+  const lines=[[T,E.nsT,"NS",nsT],[nsT,E.aT,"A",ip()],[D,E.nsD1,"NS",nsD1],[D,E.nsD2,"NS",nsD2],[nsD1,E.aD1,"A",ip()],[nsD2,E.aD2,"A",ip()],[SB,E.nsS,"NS",nsS],[nsS,E.aS,"A",ip()],[H,E.aH,"A","150."+Math.floor(Math.random()*250)+".1."+Math.floor(1+Math.random()*250)]];
+  const w=Math.max(...lines.map(l=>l[0].length));
+  const code=lines.map(l=>`${l[0].padEnd(w)} ${String(l[1]).padStart(4)} IN ${l[2].padEnd(2)} ${l[3]}`).join("\n");
+  const Z={raiz:{name:"la raíz",srv:[]},tld:{name:T,srv:[[nsT,E.nsT,E.aT]]},dom:{name:D,srv:[[nsD1,E.nsD1,E.aD1],[nsD2,E.nsD2,E.aD2]]},sub:{name:SB,srv:[[nsS,E.nsS,E.aS]]},otra:{name:"otra zona",srv:[]}};
+  const usable=(z,t)=>z==="raiz"||Z[z].srv.some(([,ns,a])=>t<ns&&t<a);
+  const label={cache:"Responde desde la caché",raiz:"Por la raíz",tld:"Por el servidor de "+T,dom:"Por un servidor de "+D,sub:"Por el servidor de "+SB};
+  function solve(target,t){
+    if(target.n===H && t<E.aH) return {start:"cache",servers:1,why:`El A de ${H} (TTL ${E.aH}) sigue vivo en t = ${t}: se responde desde la caché, sin preguntar a nadie.`};
+    const chain=target.chain; let i=0;
+    for(let k=chain.length-1;k>=0;k--){ if(usable(chain[k],t)){i=k;break} }
+    const why=[]; if(target.n===H) why.push(`El A de ${H} (TTL ${E.aH}) ya ha caducado.`);
+    for(let k=chain.length-1;k>i;k--){const z=chain[k]; if(z==="otra") continue; Z[z].srv.forEach(([n,ns,a])=>why.push(`${Z[z].name}: NS → ${n} (${ns}) ${t<ns?"vivo":"caducado"}, A (${a}) ${t<a?"vivo":"caducado"}.`));}
+    const st=chain[i];
+    if(st!=="raiz") { const ok=Z[st].srv.filter(([,ns,a])=>t<ns&&t<a).map(([n,ns,a])=>`${n} (NS ${ns}, A ${a})`); why.push(`Sigue vivo ${ok.join(" y ")}: empieza por ahí.`); }
+    else why.push("No queda ningún NS vivo con su A: hay que empezar por la raíz.");
+    const servers=1+(chain.length-i);
+    why.push(`Servidores: el DNS por defecto + ${chain.length-i} (${chain.slice(i).map(z=>z==="otra"?"el de la zona consultada":Z[z].name).join(" → ")}) = ${servers}.`);
+    return {start:st,servers,why:why.join(" ")};
+  }
+  const targets=[{n:H,chain:["raiz","tld","dom","sub"]},{n:"ftp."+SB,chain:["raiz","tld","dom","sub"]},{n:"mail."+D,chain:["raiz","tld","dom"]},{n:"www.otra."+T,chain:["raiz","tld","otra"]}];
+  const maxT=Math.max(...Object.values(E));
+  const qs=[q("g-0","dns","¿Qué se consultó en t = 0?",["*El A de "+H,"El NS de "+D,"El A de "+nsD1,"El NS de "+T],"Es el único A que no pertenece a un servidor DNS.")];
+  const used=new Set(); let k=1, guard=0;
+  while(qs.length<7 && guard++<60){
+    const tg=R(targets), t=rt(100,Math.min(maxT,5000)); const key=tg.n+t; if(used.has(key)) continue; used.add(key);
+    const r=solve(tg,t);
+    const others=Object.keys(label).filter(x=>x!==r.start && (x==="cache"?tg.n===H:tg.chain.includes(x)));
+    const opts=["*"+label[r.start],...shuffle(others).slice(0,3).map(x=>label[x])];
+    while(opts.length<4){const extra=Object.keys(label).find(x=>!opts.some(o=>o.replace("*","")===label[x])); opts.push(label[extra]);}
+    qs.push(q("g-"+k++,"dns",`En t = ${t} s se pregunta ${tg.n} ¿Por dónde empieza la resolución?`,opts,r.why));
+    if(qs.length<7 && Math.random()<0.6){
+      const nums=new Set([r.servers]); while(nums.size<4){const v=r.servers+R([-2,-1,1,2,3]); if(v>=1) nums.add(v);}
+      qs.push(q("g-"+k++,"dns",`En t = ${t} s, ¿cuántos servidores DNS intervienen al resolver ${tg.n} (contando el DNS por defecto)?`,[...nums].map(v=>(v===r.servers?"*":"")+v),r.why));
+    }
+  }
+  const ctx={title:"Problema generado",html:()=>`<p>Caché del DNS por defecto justo tras resolver una consulta (t = 0). TTL en segundos. Todas las consultas posteriores llegan a este servidor, y ninguna de ellas cambia la caché.</p><pre>${esc(code)}</pre>`};
+  start(qs.map(x=>({qq:x,ctx})),"Generador DNS",generador);
+  ses.backLabel="Otro problema";
 }
 
 /* Teclado: 1-4 para responder, Enter para seguir */
