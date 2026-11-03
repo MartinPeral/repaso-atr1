@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Repaso ATR1</title>
+<meta name="theme-color" content="#2A45D0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ATR1">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: una columna estrecha tipo app de bolsillo; barra superior fija con el progreso; la pregunta es la única tarjeta */
+:root{
+  --bg:#F2F3F7; --surface:#FFFFFF; --fg:#141A2C; --muted:#586078; --line:#D8DCE6;
+  --accent:#2A45D0; --accent-ink:#FFFFFF; --accent-soft:#E5E9FB;
+  --ok:#1C7A4B; --ok-soft:#E0F2E8; --ko:#B3302A; --ko-soft:#FAE5E3; --code:#EBEEF5;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D111E; --surface:#161B2D; --fg:#E6E9F3; --muted:#9AA2BA; --line:#2A3150;
+  --accent:#93A6FF; --accent-ink:#0D111E; --accent-soft:#1E2748;
+  --ok:#62D59D; --ok-soft:#133022; --ko:#FF8D84; --ko-soft:#3A1A1B; --code:#10152A; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0D111E; --surface:#161B2D; --fg:#E6E9F3; --muted:#9AA2BA; --line:#2A3150;
+  --accent:#93A6FF; --accent-ink:#0D111E; --accent-soft:#1E2748;
+  --ok:#62D59D; --ok-soft:#133022; --ko:#FF8D84; --ko-soft:#3A1A1B; --code:#10152A; color-scheme:dark;}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;padding-top:env(safe-area-inset-top, 0px)!important;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-bottom:calc(40px + env(safe-area-inset-bottom, 0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top, 0px);z-index:10;background:var(--bg)}
+#app{max-width:640px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:2rem;font-weight:800;letter-spacing:-.02em}
+h2{font-size:1.25rem;font-weight:800}
+h3{font-size:1.05rem;font-weight:600}
+p{margin:0}
+.label{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.stack{display:flex;flex-direction:column;gap:12px}
+.section{display:flex;flex-direction:column;gap:12px;padding-top:28px}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;
+  padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--surface);cursor:pointer;min-height:52px}
+.btn:hover{border-color:var(--accent)}
+.btn .sub{color:var(--muted);font-size:.875rem}
+.btn[disabled]{opacity:.5;cursor:default}
+.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.primary .sub{color:var(--accent-ink);opacity:.85}
+.ghost{background:none;border:none;color:var(--accent);font-weight:700;cursor:pointer;padding:8px 0}
+.chip{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+
+/* Cabecera de inicio */
+.hero{padding-top:28px;display:flex;flex-direction:column;gap:8px}
+.hero p{color:var(--muted)}
+.zone{font-family:var(--f-mono);font-size:.85rem;background:var(--code);border-radius:12px;padding:12px 14px;
+  display:grid;grid-template-columns:auto 1fr auto;gap:6px 12px;align-items:center;font-variant-numeric:tabular-nums}
+.zone .k{font-weight:600}
+.bar{height:6px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.zone .n{color:var(--muted);text-align:right}
+
+/* Sesión */
+.top{position:sticky;top:env(safe-area-inset-top, 0px);z-index:5;background:var(--bg);padding-block:10px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--line)}
+.toprow{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.count{font-family:var(--f-mono);font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+details.case{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:16px}
+details.case summary{cursor:pointer;font-weight:700;font-family:var(--f-display)}
+details.case .intro{margin-top:8px;color:var(--fg);font-size:.95rem}
+pre{font-family:var(--f-mono);font-size:.78rem;line-height:1.55;background:var(--code);border-radius:10px;padding:10px 12px;
+  overflow-x:auto;margin:10px 0 0;white-space:pre}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:16px;display:flex;flex-direction:column;gap:14px}
+.qtext{font-size:1.1rem;font-weight:700;line-height:1.4}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;padding:12px 14px;border-radius:12px;
+  border:1px solid var(--line);background:var(--bg);cursor:pointer;min-height:48px}
+.opt .let{font-family:var(--f-mono);font-weight:600;color:var(--muted);flex:none;width:1.2em}
+.opt span:last-child{min-width:0;overflow-wrap:anywhere}
+.opt:hover:not([disabled]){border-color:var(--accent)}
+.opt[disabled]{cursor:default}
+.opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.opt.right .let{color:var(--ok)}
+.opt.wrong{background:var(--ko-soft);border-color:var(--ko)}
+.opt.wrong .let{color:var(--ko)}
+.fb{border-radius:12px;padding:12px 14px;border-left:4px solid var(--ok);background:var(--ok-soft)}
+.fb.bad{border-left-color:var(--ko);background:var(--ko-soft)}
+.fb b{display:block;margin-bottom:4px}
+.fb code, .qtext code, .intro code{font-family:var(--f-mono);font-size:.88em}
+.next{margin-top:16px}
+
+/* Resultado */
+.score{font-family:var(--f-display);font-size:3.2rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.review{display:flex;flex-direction:column;gap:12px}
+.review .item{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.review .ans{color:var(--ok);font-weight:700}
+.review .exp{color:var(--muted);font-size:.92rem}
+.danger{color:var(--ko)}
+@media (prefers-reduced-motion: no-preference){.bar i{transition:width .3s ease}}
+</style>
+</head>
+<body>
+
+
+<div id="app"></div>
+
+<script>
+/* ---------- Banco de preguntas ---------- */
+/* Formato: q(id, tema, enunciado, [opciones, la correcta empieza por *], explicación) */
+function q(id,t,text,opts,e){return {id,t,q:text,o:opts.map(s=>s.replace(/^\*/,"")),a:opts.findIndex(s=>s.startsWith("*")),e}}
+const TEMAS={dns:"DNS",ldap:"LDAP",ftp:"TFTP/FTP"};
+
+const Q=[
+/* DNS */
+q("d1","dns","¿Qué tipo de consulta envía normalmente un host a su servidor DNS por defecto?",["*Recursiva","Iterativa","Inversa","De transferencia de zona"],"El host quiere la respuesta final. Luego el servidor por defecto hace consultas iterativas a la jerarquía."),
+q("d2","dns","¿Por qué los servidores raíz no suelen aceptar consultas recursivas?",["*Tendrían que reservar recursos hasta resolver cada consulta y se saturarían","Porque no conocen la IP de los TLD","Porque solo trabajan con TCP","Porque no tienen caché"],"Una recursiva obliga al servidor a buscar la respuesta completa y esperar. Con el volumen que recibe la raíz, sería un cuello de botella."),
+q("d3","dns","¿Cuál es la longitud máxima de una etiqueta DNS?",["*63 caracteres","127 caracteres","255 caracteres","32 caracteres"],"Cada etiqueta tiene como máximo 63 caracteres. El árbol puede tener hasta 127 niveles."),
+q("d4","dns","¿Cuál es la profundidad máxima del árbol DNS?",["*127 niveles","63 niveles","13 niveles","255 niveles"],"Máximo 127 niveles. El 63 es la longitud máxima de una etiqueta."),
+q("d5","dns","¿Cuántos servidores raíz hay y quién los coordina?",["*13, coordinados por IANA","13, uno por cada registry","Uno por continente, coordinados por ICANN","127, coordinados por los registradores"],"Hay 13 servidores raíz (de la a a la m). IANA coordina la raíz y crea o elimina TLD, pero no los gestiona."),
+q("d6","dns","Dos nodos del árbol DNS pueden tener la misma etiqueta si…",["*No son hermanos","Están bajo TLD distintos y solo en ese caso","Tienen distinto TTL","Nunca pueden repetirse"],"La única restricción es entre hermanos. Por eso puede haber un www bajo dte y otro bajo lsi."),
+q("d7","dns","¿Qué es un FQDN?",["*El nombre completo leído hasta la raíz, terminado en punto","El nombre del host sin el dominio","El nombre del servidor DNS principal de una zona","Un alias definido con CNAME"],"Por ejemplo, www.dte.us.es. (con punto final). Sin el punto, el nombre es relativo."),
+q("d8","dns","En la creación de dominios, ¿quién es el registrant?",["*El propietario del dominio","La empresa intermediaria","Quien mantiene el TLD","El directorio whois"],"Registrant es el dueño. Registrador es el intermediario. Registry mantiene el TLD."),
+q("d9","dns","¿Qué hace un registry?",["*Mantiene un TLD y define sus políticas de uso","Vende dominios al usuario final","Gestiona los 13 servidores raíz","Es el propietario de un dominio"],"Hay un registry por cada TLD (.com, .org…). No tiene por qué dar servicio al usuario final: para eso están los registradores."),
+q("d10","dns","El directorio whois (registrer)…",["*Lo aloja el registry y lo actualiza el registrador","Lo aloja IANA y lo actualiza el propietario","Lo aloja cada servidor DNS autoritativo","Lo alojan los servidores raíz"],"Recopila los datos del propietario de cada dominio. El registrador lo actualiza a petición del registrant."),
+q("d11","dns","¿Qué es una zona DNS?",["*Lo que gestiona una entidad, sin incluir lo que ha delegado","El subárbol completo desde un nodo hasta las hojas","Un TLD","El conjunto de servidores secundarios"],"El subárbol completo es el dominio. La zona es solo la parte que gestiona una entidad."),
+q("d12","dns","Tras delegar un subdominio, ¿qué guarda el padre sobre él?",["*Solo a quién preguntar: el NS (y el A si el servidor está dentro del subdominio)","Todos los registros del subdominio","Solo el SOA del subdominio","Nada"],"El padre solo sabe a quién remitir. Los datos (A, MX…) los tiene el servidor del subdominio."),
+q("d13","dns","¿Cuándo es imprescindible el glue record (el A del servidor en el padre)?",["*Cuando el servidor DNS está dentro del propio dominio que se delega","Siempre que el dominio tenga MX","Solo en la zona inversa","Cuando el TTL es pequeño"],"Si ns1.aula023 lleva aula023, para encontrar ns1 tendrías que preguntar a aula023: un círculo. El A en el padre lo rompe."),
+q("d14","dns","¿Qué hace un servidor DNS secundario (slave)?",["*Mantiene una copia actualizada de la zona del principal","Guarda solo la caché","Gestiona los subdominios delegados","Solo responde consultas inversas"],"El principal (master) tiene los datos originales. El secundario copia la zona y responde si el principal cae."),
+q("d15","dns","¿Para qué sirve el campo Serial del SOA?",["*Para que los secundarios sepan si la zona ha cambiado y deben actualizarse","Para indicar el TTL por defecto","Para numerar los registros de la zona","Para identificar al administrador"],"Formato habitual YYYYMMDDnn. Hay que incrementarlo con cada cambio."),
+q("d16","dns","¿Qué indica el campo Refresh del SOA?",["*Cada cuánto el secundario comprueba si debe actualizarse desde el principal","Cada cuánto se reintenta si falla la actualización","Tiempo máximo sin contactar con el principal","TTL de las respuestas negativas"],"Retry es el reintento si falla, Expire el máximo sin contacto y Minimum el TTL negativo."),
+q("d17","dns","¿Qué indica el campo Retry del SOA?",["*Cada cuánto reintenta el secundario si falla la actualización","Cada cuánto se actualiza el secundario","El TTL negativo","Tiempo máximo sin contactar con el principal"],"Si el refresh falla, el secundario vuelve a intentarlo cada Retry segundos."),
+q("d18","dns","¿Qué ocurre cuando se cumple el Expire del SOA?",["*El secundario deja de considerar válidos sus datos (vacía la zona)","El principal borra la zona","La caché de los clientes se vacía","Se incrementa el serial"],"Es el tiempo máximo que el secundario puede pasar sin hablar con el principal."),
+q("d19","dns","¿Qué indica hoy el campo Minimum del SOA?",["*El TTL de las respuestas negativas","El TTL mínimo de todos los registros","Cada cuánto se actualiza el secundario","El número mínimo de servidores NS"],"Cuánto tiempo se guarda en caché un “ese nombre no existe”."),
+q("d20","dns","En un SOA aparece postmaster.a2.rediris.com. ¿Cuál es el correo del administrador?",["*postmaster@a2.rediris.com","postmaster.a2@rediris.com","a2@rediris.com","postmaster@rediris.com"],"El primer punto equivale a la @."),
+q("d21","dns","Un dominio tiene MX 100 mx.rediris.com. y MX 200 mxback.rediris.com. ¿A cuál se entrega primero el correo?",["*A mx (prioridad 100)","A mxback (prioridad 200)","A los dos a la vez","Al que esté más cerca"],"Se entrega primero al de número menor."),
+q("d22","dns","¿Qué registro define un alias?",["*CNAME","PTR","A","NS"],"www IN CNAME titan: www es alias de titan, que es el nombre canónico."),
+q("d23","dns","¿Qué registro se usa en la zona inversa?",["*PTR","CNAME","A","MX"],"PTR relaciona una IP con su nombre, dentro de in-addr.arpa."),
+q("d24","dns","¿Cómo se escribe la entrada inversa de 150.214.7.30?",["*30.7.214.150.in-addr.arpa.","150.214.7.30.in-addr.arpa.","in-addr.arpa.150.214.7.30","30.7.214.150.arpa.in-addr."],"La IP se escribe al revés, igual que los nombres se leen de la hoja a la raíz."),
+q("d25","dns","En un fichero de zona, un nombre que no termina en punto…",["*Recibe el $ORIGIN detrás","Se interpreta como FQDN","Da error de sintaxis","Se completa con la raíz"],"Por eso, si te olvidas el punto, aparecen cosas como ns1.aula105.aula105."),
+q("d26","dns","Sobre los registros NS de un dominio, ¿qué es cierto?",["*No tienen orden de prioridad y pueden estar en otros dominios","Se consultan en el orden en que aparecen","Deben pertenecer al mismo dominio","Solo puede haber uno por dominio"],"Además, conviene repartirlos por redes distintas. Por eso, sin el SOA no sabes cuál es el primario."),
+q("d27","dns","Tras una resolución normal, ¿qué servidor guarda la información en caché?",["*El que resolvió: el que recibió la recursiva e hizo las iterativas","Todos los servidores consultados","Solo el raíz","Solo el autoritativo"],"Los que reciben iterativas responden con sus propios datos y no aprenden nada nuevo."),
+q("d28","dns","¿Qué provoca un TTL muy grande?",["*Posibles incoherencias: datos viejos en caché durante mucho tiempo","Más carga en los servidores","Que los secundarios no se actualicen","Que no se pueda usar caché"],"TTL pequeño: más carga. TTL grande: riesgo de incoherencias."),
+q("d29","dns","nslookup muestra “Non-authoritative answer”. ¿Qué significa?",["*Respondió un servidor que no es dueño de la zona (normalmente desde su caché)","La respuesta es falsa","El dominio no existe","El servidor autoritativo está caído"],"En la práctica, el cache-server respondía así porque había obtenido el dato del raíz y de tu servidor."),
+q("d30","dns","El servidor por defecto tiene en caché (vigente) el NS de com y su A. Llega una consulta sobre algo.com. ¿Por dónde empieza?",["*Por el servidor de com, sin pasar por la raíz","Por la raíz, siempre","Por el servidor autoritativo de algo.com","Responde desde caché"],"Siempre se empieza por el NS vigente más cercano al nombre preguntado, si también tiene vigente su A."),
+q("d31","dns","¿Para qué sirve el fichero root.hints (named.root)?",["*Le dice al servidor DNS cómo llegar a los servidores raíz","Guarda la caché del servidor","Define las zonas locales","Contiene la zona inversa"],"Es lo que modificaste en la práctica para apuntar al raíz del laboratorio."),
+q("d32","dns","¿Qué TLD se usa para la zona inversa?",["*.arpa",".test",".invalid",".example"],".arpa (in-addr.arpa). .test es para pruebas DNS, .example para documentación e .invalid para probar servidores nuevos."),
+q("d33","dns","¿Qué caracteriza a un sistema de nombres plano?",["*Administración centralizada y poca escalabilidad","Administración distribuida","Nombres repetidos en distintas ramas","Informa de la localización"],"Fue el esquema inicial de Internet: un único fichero en un nodo principal."),
+q("d34","dns","¿Qué ejemplo corresponde al paradigma híbrido?",["*Chat o VoIP: el servidor solo localiza a los pares","Una web clásica","BitTorrent sin tracker","DNS"],"El servidor no da el servicio: guarda la información para encontrar a los pares, que luego se comunican P2P."),
+q("d35","dns","¿Qué pila de protocolos usa una consulta DNS normal de un cliente a su servidor?",["*DNS / UDP (puerto 53) / IP / Ethernet","DNS / TCP (puerto 21) / IP / Ethernet","HTTP / TCP / IP","DNS directamente sobre IP"],"El cliente se identifica por su puerto origen (UDP), su IP y su MAC."),
+q("d36","dns","En nslookup, ¿qué devuelve set query=MX y luego hotmail.com?",["*Los servidores de correo de hotmail.com","Los servidores DNS de hotmail.com","La IP de hotmail.com","El correo del administrador"],"NS da los servidores DNS. SOA da el correo del administrador."),
+
+/* LDAP */
+q("l1","ldap","En LDAP, ¿cómo se llama el servidor?",["*DSA (Directory System Agent)","DUA (Directory User Agent)","DIT","DIB"],"El cliente es el DUA y el servidor el DSA."),
+q("l2","ldap","¿Qué puerto TCP usa LDAP por defecto?",["*389","69","21","53"],"El DUA abre la sesión conectándose al puerto TCP 389 del servidor."),
+q("l3","ldap","¿En qué se basa LDAP y qué lo diferencia de él?",["*En X.500, pero usa TCP/IP en vez de OSI y tiene menos operaciones","En DNS, pero usa TCP","En X.500, pero usa UDP","En HTTP, pero con esquema"],"Por eso es más ligero y más simple de programar y administrar."),
+q("l4","ldap","¿Qué RFC define el protocolo LDAP?",["*RFC 4511","RFC 4512","RFC 4519","RFC 959"],"4511: protocolo. 4512: modelos de información. 4519: esquema. 4513: seguridad."),
+q("l5","ldap","¿Qué es el DIB?",["*Toda la información contenida en el directorio","El árbol de entradas","El cliente LDAP","El esquema"],"DIB es la información. DIT es esa información organizada en árbol."),
+q("l6","ldap","¿Qué es el DIT?",["*Las entradas del DIB organizadas en árbol","Un servidor LDAP","El identificador de una entrada","Un tipo de atributo"],"Los nodos son entradas y los arcos son relaciones padre-hijo."),
+q("l7","ldap","El RDN de una entrada debe ser único…",["*Entre sus hermanos (hijos del mismo padre)","En todo el DIT","En todo el DSA","No tiene por qué ser único"],"Lo que es único en todo el DIT es el DN."),
+q("l8","ldap","¿Qué es el DN de una entrada?",["*La concatenación de los RDN desde la entrada hasta la raíz","El RDN de su padre","El atributo cn","El OID de su clase"],"Ejemplo: cn=Octavio Rivera, ou=personal, dc=us, dc=es."),
+q("l9","ldap","¿Es válido el RDN CN=Peter García+L=Sevilla?",["*Sí: un RDN puede tener varios pares atributo=valor unidos con +","No: un RDN solo admite un atributo","Solo si L es atributo operacional","Solo en el nodo raíz"],"Sirve para desempatar cuando un solo atributo no basta para ser único entre hermanos."),
+q("l10","ldap","¿Qué puede hacer un cliente con el atributo objectClass?",["*Modificar sus valores, pero no eliminarlo","Eliminarlo","Nada: es de solo lectura","Solo leerlo si lo pide explícitamente"],"Toda entrada lo tiene y especifica sus clases de objeto."),
+q("l11","ldap","¿Qué es cierto de los atributos operacionales?",["*No se devuelven en una búsqueda salvo que se pidan explícitamente","Los define y gestiona el usuario","Siempre son modificables","Forman parte del RDN"],"Ejemplos: creatorsName, createTimestamp, modifiersName, modifyTimestamp."),
+q("l12","ldap","¿Qué tipo de atributo es creatorsName?",["*Operacional","De usuario","Una clase de objeto","Un RDN"],"Lo usa el servidor con fines administrativos."),
+q("l13","ldap","¿Qué hereda una clase de objeto de sus superclases?",["*Sus atributos requeridos y permitidos","Solo su OID","Sus entradas","Nada"],"Una entrada debe cumplir los requisitos de todas las clases a las que pertenece."),
+q("l14","ldap","givenName usa Directory String, que no distingue mayúsculas. ¿Puede una entrada tener “john” y “JOHN”?",["*No: son valores equivalentes del mismo atributo","Sí, son distintos","Solo si es multivaluado","Solo si son atributos operacionales"],"No puede haber dos valores equivalentes del mismo atributo."),
+q("l15","ldap","¿Qué impide el esquema?",["*Añadir a una entrada atributos no permitidos por su clase","Crear más de un DSA","Hacer búsquedas","Usar RDN multivaluados"],"También impide crear entradas subordinadas de una clase incorrecta y usar valores con la sintaxis equivocada."),
+q("l16","ldap","¿Especifica LDAP cómo y dónde se almacena la información?",["*No: es transparente para el cliente","Sí: en una base de datos relacional","Sí: en ficheros LDIF","Sí: en zonas como DNS"],"Así cualquier DUA puede trabajar con cualquier implementación."),
+q("l17","ldap","¿Qué indica un referral en una respuesta LDAP?",["*Que este servidor no puede hacer la operación, pero otro (indicado con una URI) podría","Que la entrada no existe en ningún sitio","Que hay que repetir la operación","Que el cliente no tiene permisos"],"Pasa si la entrada no está en local o la operación está restringida (p. ej., en una copia de solo lectura)."),
+q("l18","ldap","¿En qué respuestas no puede aparecer un referral?",["*Unbind y Abandon","Bind y Search","Add y Delete","Compare y Modify"],"En el resto sí puede aparecer, y debe incluir al menos una URI."),
+q("l19","ldap","Si el servidor detecta varios errores en una operación, ¿cuántos códigos devuelve?",["*Uno solo: el que mejor describe el problema","Todos","Ninguno: devuelve un referral","Uno por cada atributo afectado"],"El texto adicional va en diagnosticMessage."),
+q("l20","ldap","¿Tienen que ser síncronas las operaciones LDAP?",["*No: son independientes y atómicas, y el cliente puede enviar varias sin esperar","Sí, siempre","Solo las de búsqueda","Solo si se usa Start TLS"],"Cada operación deja el directorio en un estado consistente."),
+q("l21","ldap","¿Qué es un contexto de nombre?",["*Un subárbol gestionado por un único DSA maestro","El DN de la raíz","Un atributo operacional","El conjunto de DSA de copia"],"Su prefijo es el DN de su nodo inicial."),
+q("l22","ldap","¿Qué es una entrada alias?",["*Un nombre alternativo para un objeto","Una copia de la entrada en otro DSA","Una subentrada administrativa","Un atributo multivaluado"],"Una entrada puede ser objeto (representa un objeto) o alias (otro nombre para él)."),
+q("l23","ldap","¿Cuál de estas NO es una operación LDAP?",["*Transfer","Bind","Compare","Abandon"],"Operaciones: Bind, Unbind, Unsolicited notification, Search, Modify, Add, Delete, Modify DN, Compare, Abandon, Start TLS, Extended."),
+q("l24","ldap","¿Qué es cierto del campo diagnosticMessage?",["*Es texto legible, no está estandarizado y puede ir vacío","Contiene siempre el DN buscado","Es obligatorio en toda respuesta","Lleva las URIs del referral"],"El DN de la última entrada encontrada va en matchedDN."),
+q("l25","ldap","¿Cómo se identifica un tipo de atributo o una clase de objeto?",["*Con un OID y, opcionalmente, nombres cortos (descriptores)","Con su DN","Con su RDN","Con un número de puerto"],"OID = Object IDentifier."),
+q("l26","ldap","En un DN, ¿qué clase de objeto suele tener un nodo como ou=Informática?",["*organizationalUnit","inetOrgPerson","person","alias"],"ou = unidad organizativa. Sirve para agrupar entradas."),
+
+/* TFTP / FTP */
+q("f1","ftp","¿Qué transporte y puerto usa TFTP?",["*UDP, puerto 69","TCP, puerto 69","TCP, puertos 20 y 21","UDP, puerto 53"],"TFTP es simple y no fiable. FTP usa TCP (21 control, 20 datos)."),
+q("f2","ftp","¿Qué puertos usa FTP?",["*21 para control y 20 para datos (modo activo)","69 para todo","20 para control y 21 para datos","389"],"Dos conexiones TCP: control (órdenes) y datos (ficheros)."),
+q("f3","ftp","En TFTP, ¿qué mensaje tiene opcode 04?",["*ACK","DATA","WRQ","ERROR"],"1 RRQ · 2 WRQ · 3 DATA · 4 ACK · 5 ERROR."),
+q("f4","ftp","En TFTP, ¿qué mensaje tiene opcode 02?",["*WRQ (petición de escritura)","RRQ (petición de lectura)","DATA","ACK"],"WRQ sirve para subir un fichero al servidor."),
+q("f5","ftp","¿Cuántos datos lleva como máximo un mensaje DATA de TFTP?",["*512 bytes","1024 bytes","1500 bytes","65535 bytes"],"Además del opcode (2 bytes) y el número de bloque (2 bytes)."),
+q("f6","ftp","¿Cómo sabe el receptor que un DATA es el último?",["*Porque lleva menos de 512 bytes","Porque lleva el bloque 65535","Porque va seguido de un ERROR","Porque el opcode cambia"],"Si el fichero mide un múltiplo de 512, se envía al final un DATA de 0 bytes."),
+q("f7","ftp","Se transfiere por TFTP un fichero de 1024 bytes. ¿Cuántos mensajes DATA se envían?",["*3: dos de 512 y uno de 0 bytes","2: dos de 512","1 de 1024","4"],"1024 es múltiplo de 512, así que hace falta un último DATA vacío para marcar el final."),
+q("f8","ftp","¿Qué responde el servidor TFTP a un WRQ si acepta?",["*ACK con bloque 0","DATA con bloque 1","Un RRQ","Nada: el cliente empieza a enviar"],"El ACK 0 es el permiso para empezar a escribir."),
+q("f9","ftp","¿Qué responde el servidor TFTP a un RRQ si todo va bien?",["*DATA con bloque 1","ACK con bloque 0","ACK con bloque 1","WRQ"],"Tras un RRQ llega un DATA o un ERROR."),
+q("f10","ftp","¿Qué modo TFTP se usa para un fichero binario?",["*octet","netascii","binary","raw"],"netascii es para texto."),
+q("f11","ftp","¿Qué significa el error TFTP con código 1?",["*File not found","Access violation","Disk full","File already exists"],"2 Access violation · 3 Disk full · 6 File already exists · 0 no definido."),
+q("f12","ftp","¿Para qué sirve el número de bloque en TFTP?",["*Para garantizar el orden de los datos, porque UDP no lo hace","Para cifrar los datos","Para indicar el tamaño del fichero","Para elegir el puerto"],"Va de 1 a 65535."),
+q("f13","ftp","Según teoría, ¿cuál es el problema de TFTP con ficheros largos?",["*Perder un mensaje obliga a retransmitir todo el fichero","No admite más de 512 bytes en total","No admite ficheros binarios","Necesita dos conexiones"],"Por eso es útil sobre todo para ficheros pequeños."),
+q("f14","ftp","En FTP en modo activo, ¿quién abre la conexión de datos?",["*El servidor, desde su puerto 20 hacia el cliente","El cliente, hacia el puerto 20 del servidor","El cliente, hacia el puerto que indique PORT","Nadie: va por la conexión de control"],"En modo pasivo es al revés: la abre el cliente."),
+q("f15","ftp","En FTP en modo pasivo, ¿qué ocurre?",["*El cliente envía PASV, el servidor responde con PORT y un puerto, y el cliente abre la conexión de datos","El servidor abre la conexión desde el puerto 20","Se usa UDP","Control y datos van por el puerto 21"],"Es útil cuando el cliente no acepta conexiones entrantes."),
+q("f16","ftp","¿Qué comando del protocolo FTP descarga un fichero?",["*RETR","STOR","get","LIST"],"STOR sube un fichero. get es un comando de la aplicación cliente, no del protocolo."),
+q("f17","ftp","¿Qué significa la respuesta FTP 331?",["*Usuario correcto, falta la contraseña","Transferencia empezando","No se puede abrir la conexión de datos","Error al escribir el fichero"],"125: empieza la transferencia. 425: no se puede abrir la conexión de datos. 452: error al escribir."),
+q("f18","ftp","¿Qué diferencia hay entre get y RETR?",["*get es un comando del programa cliente; RETR es el comando del protocolo","Son lo mismo","RETR es del cliente y get del protocolo","get es para TFTP y RETR para FTP"],"El cliente traduce get a RETR por la conexión de control."),
+q("f19","ftp","¿Qué es cierto de TFTP?",["*No tiene carpetas ni cifrado","Usa dos conexiones","Requiere usuario y contraseña","Usa el puerto 21"],"Es un protocolo muy simple."),
+q("f20","ftp","Se sube por TFTP un fichero de 1534 bytes. ¿Cómo es el último DATA?",["*Bloque 3 con 510 bytes","Bloque 3 con 512 bytes","Bloque 4 con 0 bytes","Bloque 2 con 510 bytes"],"1534 = 512 + 512 + 510. Como 510 < 512, es el último.")
+];
+
+/* ---------- Casos prácticos ---------- */
+const CASOS=[
+{id:"c41",t:"dns",title:"Resolución básica (boletín 4.1)",
+ intro:"Un PC (102.73.18.14) quiere entrar en www.informatica.us.es. Su DNS por defecto es 120.20.20.12, que no es autoritativo para ninguna de estas zonas.",
+ code:`servidor_dns1.es             DNS   100.100.102.100   gestiona es.
+dns_server1.com              DNS   99.99.99.99       gestiona com.
+onix.us.es                   DNS   150.214.186.69    gestiona us.es.
+dns_info.informatica.us.es   DNS   150.214.7.101     gestiona informatica.us.es.
+dns1.finantial.com           DNS   138.17.117.4      gestiona finantial.com.
+dns_sports.sports.com        DNS   146.10.158.16     gestiona sports.com.
+www.informatica.us.es        HTTP  150.214.115.75`,
+ qs:[
+  q("c41a","dns","¿Cuántas zonas DNS hay, contando la raíz?",["*7","6","5","11"],"Una por cada servidor DNS (6) más la raíz."),
+  q("c41b","dns","En el paso 2 el DNS por defecto pregunta a la raíz. ¿Qué responde?",["*es. NS servidor_dns1.es. + su A (100.100.102.100)","La IP de www.informatica.us.es","informatica.us.es. NS dns_info + su A","us.es. NS onix.us.es. + su A"],"La raíz solo conoce los TLD. Da la referencia al siguiente nivel: quién lleva es y dónde está."),
+  q("c41c","dns","¿Qué servidores guardan algo en caché tras la resolución?",["*Solo el DNS por defecto (120.20.20.12)","Todos los consultados","La raíz y el TLD es","Solo dns_info"],"Los demás solo recibieron iterativas y respondieron con sus propios datos."),
+  q("c41d","dns","Se crea fisica.us.es. con su propio DNS. ¿Dónde va la delegación (NS + A)?",["*En la zona us.es. (onix)","En la zona es.","En la zona informatica.us.es.","Solo en la zona fisica.us.es."],"El padre de fisica.us.es es us.es."),
+  q("c41e","dns","¿Dónde van el MX de fisica.us.es y el A de su servidor de correo?",["*Solo en la zona fisica.us.es.","En us.es.","En las dos zonas","En es."],"El padre solo necesita saber a quién delegar. El correo es un dato de la propia zona.")
+ ]},
+{id:"c46",t:"dns",title:"Caché con TTL (boletín 4.6)",
+ intro:"Caché del servidor DNS que contestó a un cliente de maq1.midominio.org, justo tras resolver la consulta (t = 0). El número es el TTL en segundos. Lo que no aparece tiene TTL 700.",
+ code:`miempresa.fedempes.com.   800 IN NS serverdp.miempresa.fedempes.com.
+fedempes.com.             600 IN NS matrix.dominioA.es.
+fedempes.com.             800 IN NS revol.fedempes.com.
+com.                      900 IN NS cddmahr.com.
+serverdp.miempresa.fedempes.com. 2000 IN A 2.2.2.2
+matrix.dominioA.es.      2000 IN A 45.5.15.150
+revol.fedempes.com.      2000 IN A 32.3.3.3
+cddmahr.com.             1400 IN A 16.40.4.210
+www.miempresa.fedempes.com. 1100 IN A 100.10.10.10`,
+ qs:[
+  q("c46a","dns","¿Es autoritativo para el dominio consultado el servidor que contestó?",["*No: tuvo que recorrer la jerarquía y guardarlo en caché","Sí: tiene el A de www","Sí: tiene el NS de miempresa","No se puede saber"],"Si fuera el dueño de la zona, respondería con sus datos sin preguntar a nadie."),
+  q("c46b","dns","¿Qué preguntó el cliente?",["*El A de www.miempresa.fedempes.com.","El NS de fedempes.com.","El A de serverdp","El NS de com."],"Es lo que está al final del viaje. Los demás A son de servidores DNS."),
+  q("c46c","dns","¿Cuál es el servidor primario de fedempes.com.?",["*No se puede saber sin el SOA: puede ser revol o matrix","revol, porque está dentro del dominio","matrix, porque aparece primero","cddmahr.com."],"Los NS no tienen orden de prioridad."),
+  q("c46d","dns","¿Se puede saber si fedempes.com. tiene servidor de correo?",["*No: nadie preguntó por el MX","No tiene: no hay MX en caché","Sí, es revol","Sí, es matrix"],"Que no esté en caché no significa que no exista."),
+  q("c46e","dns","A los 100 s se pregunta star.miempresa.fedempes.com. ¿Cuántos servidores DNS intervienen?",["*2: el DNS por defecto y serverdp","4: por defecto, raíz, com y serverdp","3: por defecto, revol y serverdp","1: solo el por defecto"],"El NS de miempresa (800) y el A de serverdp (2000) siguen vivos: va directo."),
+  q("c46f","dns","A los 700 s se pregunta www.fedempes.com. ¿Hace falta pasar por la raíz?",["*No: el NS de revol (800) y su A siguen vivos","Sí: el NS de matrix caducó a los 600","Sí: siempre que cambie el dominio","No: se responde desde la caché"],"Basta con que quede vivo uno de los NS del dominio con su A."),
+  q("c46g","dns","Con los servidores de com apagados, a los 1000 s se pregunta www.miempresa.fedempes.com. ¿Se resuelve?",["*Sí, desde la caché: el A de www dura 1100","No: com está apagado","Sí, preguntando a serverdp","No: el NS de miempresa ha caducado"],"Si la respuesta final sigue en caché, no se pregunta a nadie."),
+  q("c46h","dns","Igual, pero a los 1500 s. ¿Se resuelve?",["*No: han caducado el A de www y todos los NS, y hay que pasar por com, que está apagado","Sí: el A de serverdp sigue vivo","Sí: desde la caché","Sí: preguntando a revol"],"El A de serverdp solo no sirve: sin el NS de miempresa no se sabe que serverdp lleva ese dominio.")
+ ]},
+{id:"c49",t:"dns",title:"Pistas en el paquete IP (boletín 4.9)",
+ intro:"pokedex.mimundo.edu. pregunta a su DNS por defecto, kanto.ciudades.pk. La respuesta llega en un paquete IP con origen 100.20.1.23 y destino 3.2.3.7. La caché de kanto estaba vacía y queda así (t = 0):",
+ code:`charmander.fuego.pk. 1200 IN A  130.2.45.67
+blaine.fuego.pk.     3000 IN A  9.78.3.4
+katsura.espuma.pk.   3000 IN A  9.5.32.2
+naranja.pk.          3600 IN A  12.3.2.3
+amarillo.pk.         3600 IN A  14.2.5.52
+azul.pk.             3600 IN A  16.6.74.23
+fuego.pk.            5000 IN NS blaine.fuego.pk.
+fuego.pk.            5000 IN NS katsura.espuma.pk.
+pk.                  4400 IN NS naranja.pk.
+pk.                  4400 IN NS amarillo.pk.
+pk.                  4400 IN NS azul.pk.`,
+ qs:[
+  q("c49a","dns","¿Qué FQDN se consultó?",["*charmander.fuego.pk.","blaine.fuego.pk.","fuego.pk.","kanto.ciudades.pk."],"Es el único A que no pertenece a un servidor DNS."),
+  q("c49b","dns","¿Cuál es la IP de kanto?",["*100.20.1.23","3.2.3.7","9.78.3.4","No se puede saber"],"La respuesta va del servidor al cliente: el origen es kanto y el destino es pokedex."),
+  q("c49c","dns","¿Qué registro permite obtener el nombre de kanto a partir de su IP?",["*23.1.20.100.in-addr.arpa. IN PTR kanto.ciudades.pk.","100.20.1.23.in-addr.arpa. IN PTR kanto.ciudades.pk.","kanto.ciudades.pk. IN PTR 100.20.1.23","23.1.20.100.in-addr.arpa. IN A kanto.ciudades.pk."],"PTR en la zona inversa, con la IP escrita al revés."),
+  q("c49d","dns","¿Se puede crear el alias salamandra.espuma.pk. de charmander.fuego.pk.?",["*Sí: un CNAME en la zona pk., porque espuma.pk no está delegado","Sí: un CNAME en la zona fuego.pk.","No: el alias debe estar en el mismo dominio que el original","Sí: un A en la zona fuego.pk."],"El CNAME va en la zona del alias. No hay NS de espuma, así que esa zona es pk."),
+  q("c49e","dns","A los 1500 s se pregunta charmilion.fuego.pk. desde pokedex. ¿Cuántos servidores DNS intervienen?",["*2: kanto y blaine (o katsura)","4: kanto, raíz, pk y blaine","1: solo kanto","3: kanto, pk y blaine"],"Siguen vivos el NS de fuego (5000) y el A de blaine (3000)."),
+  q("c49f","dns","A los 4000 s, una estación con DNS 100.20.1.23 pregunta charmilion.fuego.pk. ¿Qué pasa?",["*Se resuelve, sin ser autoritativa, con 4 servidores: kanto, raíz, uno de pk y blaine","Se resuelve con 2 servidores, porque el NS de fuego está vivo","No se resuelve: la caché ha caducado","Se resuelve de forma autoritativa"],"El NS de fuego vive, pero los A de blaine y katsura (3000) y los de pk (3600) han caducado. Sin IPs no hay a quién preguntar: se empieza por la raíz."),
+  q("c49g","dns","A los 3000 s, una estación con DNS 3.2.3.7 pregunta charmilion.fuego.pk. ¿Qué pasa?",["*No hay respuesta: 3.2.3.7 es pokedex, un cliente","Se resuelve desde la caché de pokedex","Se resuelve con 2 servidores","Se resuelve de forma autoritativa"],"3.2.3.7 era el destino del paquete, es decir, el cliente. El enunciado dice que no tiene caché."),
+  q("c49h","dns","A los 6000 s, una estación con DNS 9.78.3.4 pregunta charmilion.fuego.pk. ¿Qué pasa?",["*Se resuelve de forma autoritativa, con 1 servidor","No se resuelve: la caché ha caducado","Se resuelve con 4 servidores","No hay respuesta"],"9.78.3.4 es blaine, que gestiona fuego.pk. La caché le da igual."),
+  q("c49i","dns","A los 3800 s, una estación con DNS 16.6.74.23 pregunta charmilion.fuego.pk. ¿Qué pasa?",["*No obtiene la IP: azul.pk es un TLD, no acepta recursivas y solo da una referencia","Se resuelve de forma autoritativa","Se resuelve con 2 servidores","Se resuelve desde caché"],"Los servidores de la jerarquía (raíz y TLD) no suelen aceptar recursivas."),
+  q("c49j","dns","Recién resuelta la consulta, se apagan todos los servidores de 9.0.0.0/8. ¿Durante cuánto tiempo puede pokedex resolver charmander.fuego.pk.?",["*1200 s","0 s","3000 s","Sin límite"],"Caen blaine y katsura, todos los DNS de fuego. Solo queda la caché de kanto, mientras dure el A de charmander."),
+  q("c49k","dns","Se apagan todos los servidores de 100.0.0.0/8. ¿Durante cuánto tiempo puede pokedex resolver charmander?",["*0 s","1200 s","4400 s","Sin límite"],"Cae kanto, su DNS por defecto, y pokedex no tiene caché."),
+  q("c49l","dns","Se apagan todos los servidores de 130.0.0.0/8. ¿Durante cuánto tiempo puede pokedex resolver charmander?",["*Sin límite","1200 s","0 s","5000 s"],"Solo cae el propio charmander. Su IP sigue estando en blaine y katsura.")
+ ]},
+{id:"cttl",t:"dns",title:"Cuenta atrás de TTL",
+ intro:"Ejercicio nuevo, estilo examen. Caché del DNS por defecto justo tras resolver una consulta (t = 0). Todas las consultas posteriores llegan a este mismo servidor.",
+ code:`net.            1000 IN NS a.nic.net.
+a.nic.net.      3000 IN A  40.1.1.1
+ocio.net.       2000 IN NS dns.ocio.net.
+ocio.net.       2000 IN NS ns2.otro.org.
+dns.ocio.net.   1500 IN A  40.2.2.2
+ns2.otro.org.   4000 IN A  40.3.3.3
+cine.ocio.net.   800 IN A  150.1.1.1`,
+ qs:[
+  q("cta","dns","¿Qué se consultó en t = 0?",["*El A de cine.ocio.net.","El NS de ocio.net.","El A de dns.ocio.net.","El A de a.nic.net."],"Es el único A que no pertenece a un servidor DNS."),
+  q("ctb","dns","En t = 900 se vuelve a preguntar cine.ocio.net. ¿Cuántos servidores DNS intervienen?",["*2: el DNS por defecto y uno de ocio.net","1: se responde desde caché","4: por defecto, raíz, net y ocio","3: por defecto, net y ocio"],"El A de cine (800) ha caducado, pero el NS de ocio (2000) y los A de sus servidores siguen vivos."),
+  q("ctc","dns","En t = 1700 se pregunta teatro.ocio.net. ¿Por dónde empieza?",["*Va directo a ns2.otro.org: el NS de ocio vive y el A de ns2 (4000) también","Por la raíz, porque el A de dns.ocio.net ha caducado","Por dns.ocio.net","Por a.nic.net"],"Basta con un NS vivo cuyo A también esté vivo. El de dns.ocio.net caducó en 1500, pero el de ns2 no."),
+  q("ctd","dns","En t = 2500 se pregunta otra.ocio.net. ¿Por dónde empieza?",["*Por la raíz: han caducado el NS de ocio (2000) y el de net (1000)","Por ns2.otro.org, porque su A sigue vivo","Por a.nic.net, porque su A sigue vivo","Responde desde caché"],"Sin NS vivos, los A que quedan no sirven: no se sabe qué dominio lleva cada servidor."),
+  q("cte","dns","¿Por qué en t = 2500 no sirve que siga vivo el A de a.nic.net?",["*Porque sin el NS de net. no sabe que a.nic.net gestiona net.","Porque a.nic.net no es autoritativo","Porque los A nunca se usan para resolver","Porque su TTL es demasiado alto"],"Hace falta la pareja: NS (quién lleva el dominio) y A (dónde está ese servidor).")
+ ]},
+{id:"czona",t:"dns",title:"Busca los errores en la zona",
+ intro:"Ejercicio nuevo, estilo 4.7. Fichero de zona de redes.edu. tal como lo ha escrito el administrador:",
+ code:`$ORIGIN redes.edu.
+$TTL 3600
+@     IN SOA ns1.redes.edu. admin.redes.edu. (
+          2026110301 ; Serial
+          3600       ; Refresh
+          600        ; Retry
+          86400      ; Expire
+          300 )      ; Minimum
+@     IN NS  ns1
+@     IN NS  ns2.redes.edu
+@     IN MX  10 correo.redes.edu.
+ns1   IN A   10.0.0.1
+web   IN A   10.0.0.20
+www   IN CNAME web`,
+ qs:[
+  q("cza","dns","¿Cómo interpreta el servidor “ns2.redes.edu”, escrito sin punto final?",["*Como ns2.redes.edu.redes.edu.","Como ns2.redes.edu.","Como ns2.","Da error de sintaxis y no arranca"],"Sin punto final se le añade el $ORIGIN detrás."),
+  q("czb","dns","¿Es correcto “@ IN NS ns1”?",["*Sí: se completa como ns1.redes.edu.","No: falta el punto final","No: un NS debe ser siempre un FQDN","No: @ no se puede usar en un NS"],"Un nombre relativo es válido si el resultado de añadirle el $ORIGIN es el que quieres."),
+  q("czc","dns","¿Qué falta para que funcione el correo de redes.edu?",["*Un registro A para correo.redes.edu.","Un PTR","Un segundo MX","Nada"],"El MX apunta a un nombre, y ese nombre necesita su A."),
+  q("czd","dns","¿Cuál es el correo del administrador de la zona?",["*admin@redes.edu","admin.redes.edu@redes.edu","ns1@redes.edu","root@redes.edu"],"En el SOA, el primer punto del segundo campo equivale a la @."),
+  q("cze","dns","¿Qué significa el 300 del campo Minimum?",["*Las respuestas negativas se guardan 300 s en caché","El secundario se actualiza cada 300 s","Es el TTL de todos los registros","Es el tiempo máximo sin contactar con el principal"],"El TTL de todos los registros lo fija aquí $TTL (3600)."),
+  q("czf","dns","Tras corregir los errores, el administrador cambia una IP. ¿Qué más debe tocar en el SOA?",["*Incrementar el Serial","Incrementar el Minimum","Reducir el Expire","Nada"],"Si no sube el serial, los secundarios no se enteran del cambio."),
+  q("czg","dns","¿Es correcto “www IN CNAME web”?",["*Sí: www.redes.edu. es alias de web.redes.edu.","No: un CNAME debe apuntar a una IP","No: falta el punto en www","No: un alias no puede apuntar a un nombre relativo"],"web existe y tiene su A, así que el alias funciona.")
+ ]},
+{id:"cldap",t:"ldap",title:"Un DIT de profesores",
+ intro:"Ejercicio nuevo, estilo 2.4 y 2.5. En un DIT existen estas entradas:",
+ code:`DN: cn=Ana Ruiz, ou=Redes, ou=Profesores, dc=eii, dc=us, dc=es
+DN: cn=Luis Gil, ou=Redes, ou=Profesores, dc=eii, dc=us, dc=es
+DN: cn=Ana Ruiz, ou=Bases de Datos, ou=Profesores, dc=eii, dc=us, dc=es`,
+ qs:[
+  q("cla","ldap","¿Cuál es el RDN de la primera entrada?",["*cn=Ana Ruiz","cn=Ana Ruiz, ou=Redes","dc=es","ou=Redes"],"El RDN es solo el primer componente del DN."),
+  q("clb","ldap","¿Es válido que existan las dos entradas cn=Ana Ruiz?",["*Sí: cuelgan de padres distintos (Redes y Bases de Datos)","No: el cn debe ser único en todo el DIT","Solo si tienen distinto objectClass","Sí, y podrían ser incluso hermanas"],"El RDN solo tiene que ser único entre hermanos. Sus DN son distintos."),
+  q("clc","ldap","Llega otra profesora de Redes que también se llama Ana Ruiz. ¿Se puede añadir?",["*Con ese mismo RDN no; habría que usar uno multivaluado, por ejemplo cn=Ana Ruiz+mail=…","Sí, LDAP lo permite sin cambios","Sí, si cambia solo el mail","No, nunca"],"Serían hermanas con el mismo RDN. Hace falta un atributo extra para desempatar."),
+  q("cld","ldap","¿Qué profundidad mínima tiene el DIT, contando dc=es como nivel 1?",["*6","5","4","7"],"dc=es, dc=us, dc=eii, ou=Profesores, ou=Redes y cn=… son 6 niveles."),
+  q("cle","ldap","¿Qué clase de objeto será “Redes”?",["*organizationalUnit","inetOrgPerson","person","alias"],"Es un nodo ou que agrupa entradas, no una persona."),
+  q("clf","ldap","Al consultar por Ana Ruiz llega un referral con una URI. ¿Qué significa?",["*Este servidor no tiene la entrada, pero indica otro que puede tenerla","La entrada no existe","El cliente no tiene permiso","Hay que repetir la consulta en el mismo servidor"],"El cliente debe contactar con la URI y evitar los bucles.")
+ ]},
+{id:"ctftp",t:"ftp",title:"Descarga por TFTP",
+ intro:"Ejercicio nuevo, estilo 3.1 y 3.3. Un cliente descarga por TFTP el fichero binario config.bin, de 1536 bytes. No hay pérdidas ni errores.",
+ code:`1536 = 512 + 512 + 512`,
+ qs:[
+  q("ctfa","ftp","¿Cuál es el primer mensaje?",["*RRQ (opcode 1), fichero config.bin, modo octet","WRQ (opcode 2), modo octet","RRQ (opcode 1), modo netascii","DATA con bloque 1"],"Descargar es leer: RRQ. Es binario: octet."),
+  q("ctfb","ftp","¿Cuántos mensajes DATA se envían?",["*4: tres de 512 bytes y uno de 0 bytes","3","2","5"],"1536 es múltiplo de 512, así que el final se marca con un DATA vacío."),
+  q("ctfc","ftp","¿Quién envía los ACK?",["*El cliente, que es quien recibe los datos","El servidor","Los dos","Nadie: TFTP no usa ACK"],"Cada DATA lo confirma quien lo recibe, con un ACK del mismo número de bloque."),
+  q("ctfd","ftp","¿Cuántos mensajes hay en total?",["*9: RRQ, 4 DATA y 4 ACK","8","7","10"],"En una lectura no hay ACK 0: el servidor responde al RRQ directamente con el DATA 1."),
+  q("ctfe","ftp","¿A qué puerto del servidor va el RRQ?",["*UDP 69","TCP 69","TCP 21","UDP 53"],"TFTP va sobre UDP, puerto 69."),
+  q("ctff","ftp","Si el servidor no tiene config.bin, ¿qué responde?",["*ERROR (opcode 5) con código 1, File not found","ACK con bloque 0","DATA vacío","ERROR con código 6"],"El código 6 es File already exists.")
+ ]}
+];
+
+/* ---------- Índices ---------- */
+const ALL={};
+Q.forEach(x=>ALL[x.id]={qq:x,caso:null});
+CASOS.forEach(c=>c.qs.forEach(x=>ALL[x.id]={qq:x,caso:c}));
+const poolByTema=t=>Object.values(ALL).filter(it=>it.qq.t===t);
+
+/* ---------- Progreso (solo en este navegador) ---------- */
+const KEY="atr1-repaso-v1";
+let S={last:{},wrong:[]};
+try{const raw=localStorage.getItem(KEY); if(raw){const p=JSON.parse(raw); if(p&&p.last) S={last:p.last,wrong:Array.isArray(p.wrong)?p.wrong:[]};}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function record(id,ok){S.last[id]=ok?1:0; S.wrong=S.wrong.filter(x=>x!==id); if(!ok) S.wrong.push(id); save();}
+
+/* ---------- Utilidades ---------- */
+const $app=document.getElementById("app");
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const L="ABCD";
+
+/* ---------- Pantalla de inicio ---------- */
+let confirmReset=false;
+function home(){
+  const rows=Object.keys(TEMAS).map(t=>{
+    const pool=poolByTema(t); const ok=pool.filter(it=>S.last[it.qq.id]===1).length;
+    const pct=pool.length?Math.round(ok/pool.length*100):0;
+    return `<span class="k">${TEMAS[t]}</span><div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div><span class="n">${ok}/${pool.length}</span>`;
+  }).join("");
+  const nw=S.wrong.filter(id=>ALL[id]).length;
+  const caseBtns=CASOS.map(c=>{
+    const ok=c.qs.filter(x=>S.last[x.id]===1).length;
+    return `<button class="btn" data-case="${c.id}"><span class="stack" style="gap:2px;min-width:0"><span><span class="chip">${TEMAS[c.t]}</span></span><strong>${esc(c.title)}</strong><span class="sub">${c.qs.length} preguntas · ${ok} acertadas</span></span><span aria-hidden="true">›</span></button>`;
+  }).join("");
+  $app.innerHTML=`
+  <header class="hero">
+    <span class="label">ATR1 · examen del lunes 9</span>
+    <h1>Repaso ATR1</h1>
+    <p>Test de teoría y casos tipo boletín de DNS, LDAP y TFTP/FTP. Cada respuesta trae su explicación.</p>
+  </header>
+  <section class="section" aria-label="Progreso">
+    <span class="label">Preguntas acertadas en el último intento</span>
+    <div class="zone">${rows}</div>
+  </section>
+  <section class="section">
+    <span class="label">Test</span>
+    <button class="btn primary" data-act="rapido"><span class="stack" style="gap:2px"><strong>Test rápido</strong><span class="sub">10 preguntas mezcladas de los tres temas</span></span><span aria-hidden="true">›</span></button>
+    ${Object.keys(TEMAS).map(t=>`<button class="btn" data-tema="${t}"><span class="stack" style="gap:2px"><strong>Solo ${TEMAS[t]}</strong><span class="sub">${Q.filter(x=>x.t===t).length} preguntas de teoría, en orden aleatorio</span></span><span aria-hidden="true">›</span></button>`).join("")}
+    <button class="btn" data-act="fallos" ${nw?"":"disabled"}><span class="stack" style="gap:2px"><strong>Repasar fallos</strong><span class="sub">${nw?nw+" preguntas falladas en el último intento":"Aún no has fallado ninguna"}</span></span><span aria-hidden="true">›</span></button>
+  </section>
+  <section class="section">
+    <span class="label">Casos prácticos</span>
+    <p style="color:var(--muted)">Ejercicios del boletín y otros nuevos del mismo estilo, paso a paso.</p>
+    ${caseBtns}
+  </section>
+  <section class="section">
+    <button class="ghost ${confirmReset?"danger":""}" data-act="reset">${confirmReset?"Pulsa otra vez para borrar todo el progreso":"Borrar progreso"}</button>
+  </section>`;
+  $app.querySelectorAll("[data-case]").forEach(b=>b.onclick=()=>{const c=CASOS.find(x=>x.id===b.dataset.case); start(c.qs.map(x=>ALL[x.id]),c.title)});
+  $app.querySelectorAll("[data-tema]").forEach(b=>b.onclick=()=>{const t=b.dataset.tema; start(shuffle(Q.filter(x=>x.t===t).map(x=>ALL[x.id])),"Solo "+TEMAS[t])});
+  $app.querySelector('[data-act="rapido"]').onclick=()=>start(shuffle(Q.map(x=>ALL[x.id])).slice(0,10),"Test rápido");
+  const fb=$app.querySelector('[data-act="fallos"]'); if(nw) fb.onclick=()=>start(shuffle(S.wrong.filter(id=>ALL[id]).map(id=>ALL[id])),"Repaso de fallos");
+  $app.querySelector('[data-act="reset"]').onclick=()=>{ if(confirmReset){S={last:{},wrong:[]};save();confirmReset=false;} else confirmReset=true; home(); };
+  window.scrollTo(0,0);
+}
+
+/* ---------- Sesión de preguntas ---------- */
+let ses=null;
+function start(items,label){
+  confirmReset=false;
+  ses={label,items:items.map(it=>({...it,order:shuffle([0,1,2,3].slice(0,it.qq.o.length)),pick:null})),i:0,ok:0};
+  show();
+}
+function show(){
+  const it=ses.items[ses.i], x=it.qq, n=ses.items.length;
+  const pct=Math.round(ses.i/n*100);
+  const caseBlock=it.caso?`<details class="case" open><summary>${esc(it.caso.title)}</summary><p class="intro">${esc(it.caso.intro)}</p><pre>${esc(it.caso.code)}</pre></details>`:"";
+  const answered=it.pick!==null;
+  const opts=it.order.map((oi,k)=>{
+    let cls="opt";
+    if(answered){ if(oi===x.a) cls+=" right"; else if(oi===it.pick) cls+=" wrong"; }
+    return `<button class="${cls}" data-oi="${oi}" ${answered?"disabled":""}><span class="let">${L[k]}</span><span>${esc(x.o[oi])}</span></button>`;
+  }).join("");
+  const good=answered&&it.pick===x.a;
+  const fb=answered?`<div class="fb ${good?"":"bad"}" role="status"><b>${good?"Correcto":"No es esa. La buena: "+esc(x.o[x.a])}</b>${esc(x.e)}</div>`:"";
+  $app.innerHTML=`
+  <div class="top">
+    <div class="toprow"><button class="ghost" data-act="salir">‹ Salir</button><span class="count">${ses.i+1} / ${n} · ${ses.ok} ✓</span></div>
+    <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
+  </div>
+  ${caseBlock}
+  <div class="card">
+    <div><span class="chip">${TEMAS[x.t]}</span></div>
+    <p class="qtext">${esc(x.q)}</p>
+    <div class="opts">${opts}</div>
+    ${fb}
+  </div>
+  ${answered?`<button class="btn primary next" data-act="next"><strong>${ses.i+1<n?"Siguiente":"Ver resultado"}</strong><span aria-hidden="true">›</span></button>`:""}`;
+  $app.querySelector('[data-act="salir"]').onclick=home;
+  if(!answered){
+    $app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>answer(+b.dataset.oi));
+  } else {
+    const nb=$app.querySelector('[data-act="next"]'); nb.onclick=next;
+  }
+}
+function answer(oi){
+  const it=ses.items[ses.i]; if(it.pick!==null) return;
+  it.pick=oi; const ok=oi===it.qq.a; if(ok) ses.ok++;
+  record(it.qq.id,ok);
+  const y=window.scrollY; show(); window.scrollTo(0,y);
+  const fbEl=$app.querySelector(".fb"); if(fbEl&&fbEl.scrollIntoView) fbEl.scrollIntoView({block:"nearest",behavior:"smooth"});
+}
+function next(){ if(ses.i+1<ses.items.length){ses.i++;show();window.scrollTo(0,0)} else end(); }
+function end(){
+  const n=ses.items.length, bad=ses.items.filter(it=>it.pick!==it.qq.a);
+  const msg=ses.ok===n?"Todas bien. A por otro bloque.":ses.ok/n>=0.7?"Bien. Repasa las falladas.":"Toca repasar. Mira las explicaciones de abajo.";
+  $app.innerHTML=`
+  <header class="hero">
+    <span class="label">${esc(ses.label)}</span>
+    <div class="score">${ses.ok}/${n}</div>
+    <p>${msg}</p>
+  </header>
+  <section class="section">
+    ${bad.length?`<button class="btn primary" data-act="rep"><strong>Repetir las ${bad.length} falladas</strong><span aria-hidden="true">›</span></button>`:""}
+    <button class="btn" data-act="home"><strong>Volver al inicio</strong><span aria-hidden="true">›</span></button>
+  </section>
+  ${bad.length?`<section class="section"><span class="label">Falladas</span><div class="review">${bad.map(it=>`<div class="item"><span><span class="chip">${TEMAS[it.qq.t]}</span></span><strong>${esc(it.qq.q)}</strong><span class="ans">${esc(it.qq.o[it.qq.a])}</span><span class="exp">${esc(it.qq.e)}</span></div>`).join("")}</div></section>`:""}`;
+  $app.querySelector('[data-act="home"]').onclick=home;
+  const r=$app.querySelector('[data-act="rep"]'); if(r) r.onclick=()=>start(bad.map(it=>({qq:it.qq,caso:it.caso})),"Repetir falladas");
+  window.scrollTo(0,0);
+}
+
+/* Teclado: 1-4 para responder, Enter para seguir */
+document.addEventListener("keydown",e=>{
+  if(!ses||!$app.querySelector(".card")) return;
+  const it=ses.items[ses.i];
+  if(it.pick===null && /^[1-4]$/.test(e.key)){const k=+e.key-1; if(k<it.order.length) answer(it.order[k]);}
+  else if(it.pick!==null && e.key==="Enter"){e.preventDefault(); next();}
+});
+
+home();
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}
+</script>
+
+</body>
+</html>
