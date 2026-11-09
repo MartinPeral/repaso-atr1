@@ -153,6 +153,7 @@ pre.mine{white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
 .gbtn.on[data-v="0.5"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 .gbtn.on[data-v="0"]{background:var(--ko-soft);border-color:var(--ko);color:var(--ko)}
 .pscore{color:var(--muted)}
+.btn.exam{min-height:64px}
 </style>
 </head>
 <body>
@@ -1371,6 +1372,342 @@ Además, el correo se entrega primero a **mdam.otro.dominio.es** (prioridad 15 <
 - **d)** El correo pasa a 220.21.2.4. ¿Cuánto hay que esperar como máximo?
 </script>
 
+<!-- ===================== EXÁMENES ANTERIORES ===================== -->
+<script type="text/markdown" id="ap-1">
+## LDAP
+- **Modelos:** de **información** (qué se guarda: entradas, atributos, clases, esquema, DIT) y de **protocolo** (cómo hablan DUA y DSA).
+- **Modelo de protocolo:** cliente-servidor (DUA y DSA), **TCP 389**. Peticiones y respuestas, independientes y atómicas, no síncronas. Mensajes: peticiones (Bind, Search, Add…), respuestas (código + referral) y notificaciones.
+- **Esquema:** las reglas de las entradas (clases, atributos, sintaxis). Impide clases, atributos o sintaxis incorrectos.
+- **Atributo operacional:** lo pone el servidor (`creatorsName`, `modifyTimestamp`…) y no sale en una búsqueda salvo que se pida. Ejemplo: la fecha de la última actualización.
+
+## DNS
+- **Refresh:** cada cuánto se actualiza el secundario.
+- **Retry:** cada cuánto reintenta si ha fallado.
+- **Expire:** el máximo sin contactar con el primario.
+- **Minimum:** el TTL de las respuestas negativas.
+- **Nombre a partir de una IP:** PTR con la IP al revés en `in-addr.arpa`, en el servidor de su zona inversa, con las delegaciones desde los padres.
+
+## TFTP
+- **Número de DATA:** ⌊tamaño/512⌋ + 1 (si es múltiplo de 512, el último va con 0 bytes).
+- **Escritura:** WRQ + ACK 0 + N DATA + N ACK. **Lectura:** RRQ + N DATA + N ACK.
+- **Ejemplo, 2560 B:** 6 DATA y 7 ACK.
+- **Fin del nombre del fichero:** un byte a 0.
+- **Número de bloque:** ordena los datos (UDP no lo hace) y dice qué confirma cada ACK. Ocupa 2 bytes.
+
+## FTP
+- **Activo:** control del cliente al 21; los datos los abre el servidor desde el 20.
+- **Pasivo:** PASV, el servidor responde con PORT y el cliente abre los datos.
+- **Modos de transferencia:** ASCII (texto) y binario (bytes tal cual).
+- **Descargar un fichero:** `RETR fichero`, por la conexión de control (21).
+
+## TFTP frente a FTP
+TFTP: UDP 69, sin usuarios ni carpetas; la fiabilidad la ponen los números de bloque y los ACK. FTP: TCP con dos conexiones (control 21 y datos 20), con usuarios, contraseñas y directorios.
+</script>
+
+<script type="text/markdown" id="ap-2">
+## Ideas clave
+- **RDN** = nombre dentro de su carpeta → **único entre hermanos**.
+- **DN** = ruta completa, de la hoja a la raíz → único en todo el DIT.
+- Mismo RDN con **otro padre** → sí se puede.
+- Si algo se repite entre hermanos → combinar atributos con **`+`**.
+- Atributo que **no está en el RDN** → puede tener **varios valores**.
+- Profundidad **mínima** → todos los `dc` juntos son **un solo nodo**.
+
+## Método para dibujar el DIT
+1. Raíz: el dominio (`dc=…`).
+2. Carpetas `ou` (organizationalUnit): los grupos del enunciado.
+3. Hojas: las personas o cosas.
+4. RDN de las hojas: mira qué se repite en los ejemplos.
+5. "¿Se puede añadir…?": construye su RDN y compáralo con sus hermanos.
+
+## Resumen de los parciales
+- **24-25, Proyectos:** raíz → tipo → subtipo → proyecto, con 4 DSA. El acrónimo y el código se repiten por separado → RDN `ac=…+cod=…`. ¿Dos IP? Sí. ¿Proyecto nuevo? No puede repetir acrónimo **y** código.
+- **23-24 A, Empresa:** raíz → departamento → ciudad → `sn=…`. ¿Teléfono del departamento? Sí, en su nodo `ou`. ¿Antonio Romero en Diseño? En Almería no (ya hay `sn=Romero`); en otra ciudad sí.
+- **23-24 B, Tiendas:** raíz → tienda → departamento → sección → producto (`id+marca`). ¿El mismo producto en dos departamentos? Sí. ¿Stock de una marca y modelo? 3 hojas, una por tienda. ¿El mismo id con marca nueva? Sí.
+</script>
+
+<script type="text/markdown" id="ap-3">
+## Paso 0: quién es quién (siempre lo primero)
+- Haz una tabla: **estación → su DNS → qué es** (primario, secundario, DNS normal, TLD, un cliente…).
+- **Paquete de respuesta:** origen = **servidor**, destino = **cliente**.
+- **Servidor que no guarda nada en caché** al responder → es **autoritativo** de esa zona.
+- **Primario** = el primer nombre del SOA. Otro autoritativo de la misma zona = **secundario** (una copia).
+- **IP fuera del rango reservado** para los DNS → **no es un DNS**: no hay respuesta.
+- Sin NS de un subdominio en la caché → **no está delegado** (es parte de la zona padre).
+
+## Resoluciones
+- Cliente → su DNS: **recursiva**. Su DNS → jerarquía: **iterativas**.
+- Empieza por el **NS vivo más cercano** que tenga su **A vivo**. Si no queda ninguno, la raíz.
+- Cuenta el TTL **desde que se guardó**, no desde t = 0.
+- Si un servidor está apagado, se prueba el otro NS. Si está fuera del dominio, **su IP no viene como glue** y hay que resolverla aparte.
+
+## Tiempos
+- **Secundario:** solo ve los cambios cuando hace **refresh**. Si el primario está apagado, falla y lo reintenta cada **retry**. La actualización tarda lo que diga el enunciado.
+- **Respuesta negativa** → el DNS que no es autoritativo la guarda en caché durante el **Minimum**.
+- **Cambio de IP:** como máximo, Refresh (el secundario) + TTL (las cachés).
+- **Alias (CNAME):** primero se resuelve el alias y luego el nombre real. Cuenta cuándo sabe cada servidor el nombre real.
+- Escribe siempre la suposición que hagas (por ejemplo, "cuento el refresh desde que terminó la última actualización").
+
+## Añadir registros
+- Host nuevo → solo su **A** en la zona que lo contiene, en el **primario**.
+- Fichero de zona → solo los nombres que **terminan en esa zona**.
+- Padre de una zona → solo **NS + A (glue)** de los servidores que están dentro del hijo.
+</script>
+
+<script type="text/markdown" id="enu-p2425-2">
+Parcial 24-25. Clase **Proyecto** (todos los atributos son cadenas de texto): `ac` (acrónimo), `IP` (investigador principal), `cod` (código), `ent` (entidad responsable), `fund` (financiadora), `key` (palabras clave), `inic` (inicio), `D` (duración), `pre` (presupuesto). Los nodos intermedios y la raíz usan clases del esquema estándar.
+Tipos y subtipos: **Investigación** (Básica, Aplicada) · **Transferencia** (Público, Privado) · **Docencia** (Innovación, Adaptación, Aplicación) · **Gestión** (Escuela, Departamento, Comisión). **Cada tipo lo almacena y gestiona una máquina diferente.** El DIT es de la Universidad de Sevilla (us.es.).
+```
+ac        IP    cod         ent     tipo / subtipo
+TANIA     ORR   19872-3-20  DTE-US  Transferencia / Público
+TANIA     EDZ   19444-3-25  DTE-US  Transferencia / Público
+DALIA     ORR   19444-3-25  DTE-US  Transferencia / Público
+SOFIA     JRR   19872-3-20  DTE-US  Transferencia / Privado
+MSF       JLSR  19472-6-10  ATC-US  Investigación / Básica
+HealthAI  JLSR  19472-6-10  ATC-US  Docencia / Innovación
+CEr       ORR   12343-1-22  DTE-US  Gestión / Comisión
+```
+</script>
+<script type="text/markdown" id="pre-p2425-2">
+- **a)** Representa el DIT con el RDN de cada nivel. Incluye los cuatro primeros atributos, con sus valores, de los cuatro últimos ejemplos.
+- **b)** Escribe un DN de un proyecto de cada tipo de los ejemplos.
+- **c)** ¿Podría un proyecto tener dos investigadores responsables?
+- **d)** ¿Qué debe cumplir un nuevo proyecto de transferencia pública para poder añadirlo al DIT?
+</script>
+<script type="text/markdown" id="sol-p2425-2">
+## Clave: el RDN
+En Transferencia → Público, **TANIA** se repite (el acrónimo solo no vale) y **19444-3-25** también (el código solo no vale). Juntos nunca se repiten → **RDN `ac=…+cod=…`**.
+
+## a) DIT
+```
+dc=us,dc=es
+├─ ou=Investigación                (DSA 1)
+│   ├─ ou=Básica
+│   │   └─ ac=MSF+cod=19472-6-10      ac MSF · IP JLSR · cod 19472-6-10 · ent ATC-US
+│   └─ ou=Aplicada
+├─ ou=Transferencia                (DSA 2)
+│   ├─ ou=Público
+│   └─ ou=Privado
+│       └─ ac=SOFIA+cod=19872-3-20    ac SOFIA · IP JRR · cod 19872-3-20 · ent DTE-US
+├─ ou=Docencia                     (DSA 3)
+│   ├─ ou=Innovación
+│   │   └─ ac=HealthAI+cod=19472-6-10 ac HealthAI · IP JLSR · cod 19472-6-10 · ent ATC-US
+│   ├─ ou=Adaptación
+│   └─ ou=Aplicación
+└─ ou=Gestión                      (DSA 4)
+    ├─ ou=Escuela
+    ├─ ou=Departamento
+    └─ ou=Comisión
+        └─ ac=CEr+cod=12343-1-22      ac CEr · IP ORR · cod 12343-1-22 · ent DTE-US
+```
+Raíz: `dcObject`. Tipos y subtipos: `organizationalUnit`. Cada tipo es un subárbol gestionado por su DSA.
+
+## b) DN de cada tipo
+```
+ac=TANIA+cod=19872-3-20, ou=Público, ou=Transferencia, dc=us, dc=es
+ac=MSF+cod=19472-6-10, ou=Básica, ou=Investigación, dc=us, dc=es
+ac=HealthAI+cod=19472-6-10, ou=Innovación, ou=Docencia, dc=us, dc=es
+ac=CEr+cod=12343-1-22, ou=Comisión, ou=Gestión, dc=us, dc=es
+```
+
+## c) ¿Dos investigadores?
+**Sí.** `IP` no forma parte del RDN, así que puede tener varios valores en la misma entrada (salvo que el esquema lo defina como de valor único).
+
+## d) Proyecto nuevo de Transferencia pública
+Su RDN (acrónimo + código) no puede coincidir con el de ningún hermano en `ou=Público, ou=Transferencia`: TANIA+19872-3-20, TANIA+19444-3-25 o DALIA+19444-3-25. Puede repetir solo el acrónimo o solo el código. Además, debe ser de la clase Proyecto con atributos de texto.
+</script>
+
+<script type="text/markdown" id="enu-p2324a-2">
+Parcial 23-24 (A). DN de un DIT (existe un único nodo que representa al dominio):
+```
+sn=García,    ou=Sevilla, ou=Comercial,  dc=OR, dc=mpm, dc=com
+sn=Romero,    ou=Almería, ou=Diseño,     dc=OR, dc=mpm, dc=com
+sn=Guillén,   ou=Sevilla, ou=Desarrollo, dc=OR, dc=mpm, dc=com
+sn=Castillo,  ou=Granada, ou=Dirección,  dc=OR, dc=mpm, dc=com
+sn=Rodríguez, ou=Córdoba, ou=Diseño,     dc=OR, dc=mpm, dc=com
+sn=Valle,     ou=Granada, ou=Comercial,  dc=OR, dc=mpm, dc=com
+sn=Reyes,     ou=Almería, ou=Desarrollo, dc=OR, dc=mpm, dc=com
+```
+</script>
+<script type="text/markdown" id="pre-p2324a-2">
+- **a)** ¿Cuál es el dominio de la empresa?
+- **b)** Representa el DIT con el RDN de cada nivel.
+- **c)** ¿Se podrá guardar el teléfono de cada departamento (Comercial, Diseño, Desarrollo y Dirección)?
+- **d)** ¿Se podrá contratar a "Antonio Romero Reyes" en el departamento de Diseño?
+</script>
+<script type="text/markdown" id="sol-p2324a-2">
+## a) Dominio
+**OR.mpm.com** (`dc=OR, dc=mpm, dc=com`).
+
+## b) DIT
+```
+dc=OR,dc=mpm,dc=com
+├─ ou=Comercial ── ou=Sevilla → sn=García
+│                └ ou=Granada → sn=Valle
+├─ ou=Diseño ──── ou=Almería → sn=Romero
+│                └ ou=Córdoba → sn=Rodríguez
+├─ ou=Desarrollo ─ ou=Sevilla → sn=Guillén
+│                └ ou=Almería → sn=Reyes
+└─ ou=Dirección ── ou=Granada → sn=Castillo
+```
+Se lee cada DN de derecha a izquierda: dominio → departamento → ciudad → persona.
+
+## c) Teléfono de cada departamento
+**Sí.** Cada departamento es **un único nodo** (`ou=Comercial`…), de la clase `organizationalUnit`, que admite `telephoneNumber`. El teléfono se guarda en ese nodo.
+
+## d) Antonio Romero Reyes en Diseño
+El RDN de las personas es `sn=…`. En **Diseño → Almería** ya existe `sn=Romero`, así que, si su RDN es `sn=Romero`, **no se puede** ahí (serían hermanos con el mismo RDN). **En Diseño → Córdoba, o en otra ciudad nueva, sí se puede** (otro padre). Si su `sn` fuera "Romero Reyes" completo, no chocaría con nadie.
+</script>
+
+<script type="text/markdown" id="enu-p2324b-2">
+Parcial 23-24 (B). DIT de la empresa **miempresa.dte.com.** con el stock de sus tiendas, con **5 niveles**. El 2.º nivel es la **tienda** (Sevilla, Málaga, Almería). Cada tienda tiene **departamentos** (Informática, Música, Electrónica, Videojuegos) y cada departamento tiene **secciones** (Informática: Equipos, Software, Consumibles; Música: Discos, Productos digitales; Electrónica: TV, Sonido, Redes; Videojuegos: Consolas, Accesorios, Juegos).
+Las hojas son los **productos en stock**: identificador, descripción, marca, modelo, características (color, capacidad…) y número en stock (puede ser 0). **El RDN de las hojas es identificador + marca.**
+</script>
+<script type="text/markdown" id="pre-p2324b-2">
+- **a)** Representa el DIT con el RDN de cada nivel.
+- **b)** ¿Podrían dos productos pertenecer a dos departamentos distintos?
+- **c)** ¿Cuántos nodos hay que consultar como mínimo para saber cuántos productos de una marca y modelo hay en toda la empresa?
+- **d)** ¿Se podría añadir un producto nuevo, de una marca y un modelo nuevos, cuyo identificador sea igual al del producto XT-1234 (15 unidades en Almería)?
+</script>
+<script type="text/markdown" id="sol-p2324b-2">
+## a) DIT (5 niveles)
+```
+dc=miempresa,dc=dte,dc=com                      (1, dcObject)
+├─ ou=Sevilla                                   (2, tienda)
+│   ├─ ou=Informática                           (3, departamento)
+│   │   ├─ ou=Equipos                           (4, sección)
+│   │   │   └─ id=XT-1234+marca=…               (5, producto)
+│   │   ├─ ou=Software
+│   │   └─ ou=Consumibles
+│   ├─ ou=Música ── ou=Discos · ou=Productos digitales
+│   ├─ ou=Electrónica ── ou=TV · ou=Sonido · ou=Redes
+│   └─ ou=Videojuegos ── ou=Consolas · ou=Accesorios · ou=Juegos
+├─ ou=Málaga   (igual)
+└─ ou=Almería  (igual)
+```
+Tiendas, departamentos y secciones: `organizationalUnit`. Producto: clase propia con id, descripción, marca, modelo, color, capacidad y stock.
+
+## b) ¿Un producto en dos departamentos?
+**Sí.** Los departamentos son padres distintos, así que dos productos (incluso con el mismo `id+marca`) pueden estar en departamentos diferentes sin que choquen sus RDN.
+
+## c) Stock de una marca y modelo en toda la empresa
+**3 nodos** como mínimo: hay que consultar la hoja de ese producto en **cada una de las tres tiendas** (está en la misma sección de cada una) y sumar su stock.
+
+## d) El mismo id que XT-1234 con marca nueva
+**Sí.** El RDN es `id+marca`: con una marca nueva, el RDN es distinto al de XT-1234, así que se puede añadir incluso en la misma sección de Almería.
+</script>
+
+<script type="text/markdown" id="enu-p2425-3">
+Parcial 24-25. Estaciones y su DNS por defecto: **A → 100.1.32.57**, **B → "nsd.fundac.org."**, **C → 120.3.23.34**, **D → 130.30.2.17**.
+- El DNS de C pertenece a **fide.fundac.org.**; su hostname es **sptd**.
+- 130.30.2.17 **no es autoritativo** de ninguna zona.
+- Los DNS intentan actualizar su mapa al ponerse en marcha; las actualizaciones tardan **100 s**. Los clientes no tienen caché y los servidores empiezan con la caché vacía.
+- TTL no indicados: **NS 2000** y **resto 2500**. Los primarios no indicados se llaman **serverDNS** y pertenecen a su dominio.
+- SOA de fide.fundac.org. (todas las zonas usan los mismos tiempos):
+```
+fide.fundac.org. IN SOA nsd.fundac.org. admin.fide.fundac.org.
+                 (2024111300 5000 800 12000 10000)
+```
+Eventos:
+```
+t=0     Se encienden todos los DNS menos 130.30.2.17
+t=500   A pregunta server1.lab.atr1.dom.edu.
+t=1000  C pregunta server4.fide.fundac.org.
+t=1500  B pregunta server2.atr1.dom.edu.
+t=2500  D pregunta server3.rc.dom.edu.
+t=2800  Se apaga named.dom.edu.
+t=2900  B pregunta server5.dom.edu.
+t=3000  Se enciende 130.30.2.17
+t=3500  Se añade server6.fide.fundac.org. A 145.2.32.5
+t=4500  Se apaga nsd.fundac.org.
+t=5200  C pregunta server6.fide.fundac.org.
+t=5500  D pregunta server6.fide.fundac.org.
+t=6000  Se enciende nsd.fundac.org.
+t=6200  Se añade el alias server7.atr1.dom.edu. de server6.fide.fundac.org.
+```
+Caché del DNS de A justo después de t = 500:
+```
+edu.                 2500 IN NS nserver.edu.
+dom.edu.             2000 IN NS named.dom.edu.
+dom.edu.             2000 IN NS sname.fundac.org.
+atr1.dom.edu.        2000 IN NS namser.atr1.dom.edu.
+nserver.edu.         2500 IN A  130.50.5.15
+named.dom.edu.       2500 IN A  140.2.34.5
+namser.atr1.dom.edu. 2500 IN A  150.43.2.34
+server1.lab.atr1.dom.edu. 3000 IN A 210.23.4.56
+```
+- En t = 1000, sptd **no guardó nada en caché**; la respuesta fue 207.31.49.3.
+- En t = 1500, B recibe una **respuesta negativa** en un paquete IP con origen **100.1.32.57** y destino **200.9.32.44**.
+</script>
+<script type="text/markdown" id="pre-p2425-3">
+- **a)** ¿Qué hay que añadir para resolver www.lab.atr1.dom.edu. (208.3.20.5)? ¿FQDN del servidor donde se añade?
+- **b)** Completa el fichero de la zona fide.fundac.org.
+- **c)** ¿Qué información de fide.fundac.org. tendrá el primario de fundac.org.?
+- **d)** ¿Obtiene respuesta D en t = 2500?
+- **e)** Representa el procedimiento de la consulta de t = 2900: FQDN de cada servidor y contenido de la respuesta.
+- **f)** ¿Qué respuesta obtiene C en t = 5200?
+- **g)** ¿Obtiene respuesta D en t = 5500?
+- **h)** ¿En qué instante obtienen A, B, C y D la IP 145.2.32.5 al preguntar server7.atr1.dom.edu.?
+</script>
+<script type="text/markdown" id="sol-p2425-3">
+## Quién es quién
+- **Paquete de t = 1500:** origen 100.1.32.57 = el DNS de B = **nsd.fundac.org**. Es la misma IP que usa A → **A y B usan nsd**.
+- **SOA:** el primario de fide.fundac.org es **nsd** (autoritativo).
+- **sptd.fide.fundac.org (120.3.23.34)** no guardó nada en caché → es **autoritativo**; como no es el primario, es el **secundario**.
+- **130.30.2.17:** DNS normal, **apagado hasta t = 3000**.
+- No hay NS de lab en la caché → **lab no está delegado**: es parte de atr1.dom.edu, cuyo único servidor es **namser**.
+
+## a)
+`www.lab.atr1.dom.edu. 2500 IN A 208.3.20.5` en la zona atr1.dom.edu, en su primario **namser.atr1.dom.edu.**
+
+## b)
+```
+fide.fundac.org.          2500 IN SOA nsd.fundac.org. admin.fide.fundac.org.
+                               (2024111300 5000 800 12000 10000)
+fide.fundac.org.          2000 IN NS  nsd.fundac.org.
+fide.fundac.org.          2000 IN NS  sptd.fide.fundac.org.
+sptd.fide.fundac.org.     2500 IN A   120.3.23.34
+server4.fide.fundac.org.  2500 IN A   207.31.49.3
+server6.fide.fundac.org.  2500 IN A   145.2.32.5   (desde t = 3500, subiendo el serial)
+```
+El A de nsd no va aquí, sino en fundac.org.
+
+## c)
+```
+fide.fundac.org.      2000 IN NS nsd.fundac.org.
+fide.fundac.org.      2000 IN NS sptd.fide.fundac.org.
+sptd.fide.fundac.org. 2500 IN A  120.3.23.34   (glue, obligatorio)
+nsd.fundac.org.       2500 IN A  100.1.32.57   (dato propio de fundac.org)
+```
+
+## d)
+**No.** 130.30.2.17 está apagado hasta t = 3000, y D no tiene caché ni otro servidor.
+
+## e) t = 2900, server5.dom.edu.
+Han pasado 2400 s desde t = 500: los NS de dom.edu (2000) han caducado; el de edu (2500) sigue vivo.
+1. B → nsd (recursiva).
+2. nsd → **nserver.edu.** (130.50.5.15): `dom.edu. NS named.dom.edu.` y `NS sname.fundac.org.` + `named A 140.2.34.5`.
+3. nsd → **named.dom.edu.** → no responde (apagado desde 2800).
+4. nsd → **raíz** (para la IP de sname, que no viene como glue): `org. NS serverDNS.org.` + A.
+5. nsd → **serverDNS.org.**: `fundac.org. NS serverDNS.fundac.org.` + A.
+6. nsd → **serverDNS.fundac.org.**: `sname.fundac.org. A IP_sname`.
+7. nsd → **sname.fundac.org.**: `server5.dom.edu. A IP_server5` (autoritativa).
+8. nsd → B (no autoritativa).
+
+## f) C, t = 5200
+sptd (secundario) tiene la copia de t = 0 (terminada en t = 100). Su refresh de t = 5100 falló, porque nsd está apagado desde 4500. No tiene server6 → **respuesta negativa autoritativa**.
+
+## g) D, t = 5500
+130.30.2.17: raíz → org → fundac.org (delegación de fide). nsd está apagado → responde sptd, que sigue sin server6 (el siguiente retry es en t = 5900) → **respuesta negativa, no autoritativa**. 130.30.2.17 **la guarda 10000 s** (hasta t = 15500).
+
+## h) server7 → server6 = 145.2.32.5
+- **A y B (nsd, el primario): desde t = 6200.** nsd tiene server6 desde 3500 y está encendido desde 6000; solo falta el alias.
+- **C (sptd): desde t = 6800.** Sus intentos: 5100 ✗ y 5900 ✗ (nsd apagado); 6700 ✓, que termina en 6800.
+- **D (130.30.2.17): desde t = 15500**, cuando caduca la negativa que guardó en t = 5500.
+
+Suposición: el refresh se cuenta desde que terminó la última actualización (t = 100). Si se contara desde t = 0, C tendría la IP en 6700.
+</script>
+
 <script>
 /* ================= Datos ================= */
 function q(id,t,text,opts,e){return {id,t,q:text,o:opts.map(s=>s.replace(/^\*/,"")),a:opts.findIndex(s=>s.startsWith("*")),e}}
@@ -1623,6 +1960,55 @@ const BOL=[
  q("b412h","dns","¿A qué servidor se entrega primero el correo de atr1?",["*mdam.otro.dominio.es (prioridad 15)","sermail (40)","A los dos a la vez","A server"],"Primero el de número menor.")]}
 ];
 
+
+/* ================= Exámenes anteriores ================= */
+const P1Q=[
+ q("x1a","ldap","¿Qué modelos define LDAP?",["*De información (qué se guarda y cómo) y de protocolo (cómo se comunican DUA y DSA)","Cliente y servidor","DIT y DIB","Esquema y referral"],"El de información describe entradas, atributos, clases, esquema y DIT; el de protocolo, las operaciones entre cliente y servidor."),
+ q("x1b","ldap","En el modelo de protocolo de LDAP, ¿qué es cierto?",["*Cliente-servidor sobre TCP 389; las operaciones son independientes y atómicas y no tienen que ser síncronas","Va sobre UDP 389 y cada petición espera su respuesta","Es P2P entre DSA","Usa el puerto 53"],"Mensajes: peticiones (Bind, Search…), respuestas (código + referral) y notificaciones."),
+ q("x1c","ldap","Se guarda en todas las hojas la fecha de su última actualización. ¿Qué tipo de atributo es?",["*Operacional (lo pone el servidor, como modifyTimestamp)","De usuario","Parte del RDN","Una clase de objeto"],"No lo introduce el usuario: lo gestiona el servidor automáticamente."),
+ q("x1d","ldap","¿Qué es el esquema en LDAP?",["*Las reglas que deben cumplir las entradas: clases, tipos de atributo, sintaxis y comparación","El árbol de entradas","El servidor LDAP","El nombre de una entrada"],"Impide clases incorrectas, atributos no permitidos y sintaxis equivocadas."),
+ q("x1e","dns","¿Para qué sirve RETRY en DNS?",["*Es lo que espera el secundario para reintentar la actualización si ha fallado","Cada cuánto se actualiza normalmente el secundario","El TTL negativo","El máximo sin contactar con el primario"],"Refresh: actualización normal. Expire: máximo sin contacto. Minimum: TTL negativo."),
+ q("x1f","dns","¿Qué hace falta para obtener el FQDN del servidor con IP 120.8.17.19?",["*19.17.8.120.in-addr.arpa. IN PTR ftpserver.exam.atr1.es., en el servidor de su zona inversa (con sus delegaciones)","120.8.17.19.in-addr.arpa. IN PTR …","ftpserver.exam.atr1.es. IN A 120.8.17.19","Un CNAME"],"PTR con la IP al revés."),
+ q("x1g","ftp","Se sube por TFTP un fichero de 2560 B. ¿Cuántos DATA y ACK?",["*6 DATA y 7 ACK","5 DATA y 5 ACK","5 DATA y 6 ACK","6 DATA y 6 ACK"],"2560 = 5 × 512 exactos: 5 DATA de 512 y uno de 0. ACK: el ACK 0 del WRQ más uno por cada DATA."),
+ q("x1h","ftp","En un WRQ, ¿cómo se sabe dónde termina el nombre del fichero?",["*Le sigue un byte a 0","Por un campo de longitud","Porque termina el paquete","Por un punto"],"Formato: [02 | nombre | 0 | modo | 0]."),
+ q("x1i","ftp","El número de bloque de un DATA TFTP…",["*Sirve para ordenar los datos (UDP no lo hace) y confirmar cada bloque; ocupa 2 bytes","Indica el tamaño; ocupa 4 bytes","Es el puerto; ocupa 2 bytes","Cifra los datos; ocupa 1 byte"],"Va del 1 al 65535."),
+ q("x1j","ftp","En el modo activo de FTP, ¿quién abre la conexión de datos?",["*El servidor, desde su puerto 20","El cliente, hacia el puerto 20","El cliente, tras enviar PASV","Ninguno: los datos van por el 21"],"Control: cliente → puerto 21. En el pasivo la abre el cliente."),
+ q("x1k","ftp","¿Qué modos de transferencia define FTP?",["*ASCII (texto) y binario (bytes tal cual)","Activo y pasivo","Netascii y octet","Control y datos"],"Activo y pasivo son modos de conexión; netascii y octet son de TFTP."),
+ q("x1l","ftp","¿Con qué comando se descarga file01.pdf y por qué conexión va?",["*RETR file01.pdf, por la conexión de control (21)","get file01.pdf, por la de datos","STOR file01.pdf, por la de control","RETR file01.pdf, por la de datos (20)"],"El fichero viaja por la de datos, pero la orden va por la de control."),
+ q("x1m","ftp","¿Qué diferencia a TFTP de FTP?",["*TFTP: UDP 69, sin usuarios ni carpetas. FTP: TCP con control (21) y datos (20), con usuarios y directorios","TFTP usa TCP y FTP UDP","Son iguales, pero en puertos distintos","TFTP permite cifrado y FTP no"],"TFTP garantiza la entrega con números de bloque y ACK.")
+];
+const EXB=[
+{id:"p2425-2",ex:"2",t:"ldap",title:"Parcial 24-25 · Proyectos",d:5,qs:[
+ q("e22a","ldap","¿Qué RDN tienen los proyectos?",["*ac=…+cod=… (acrónimo + código)","ac=…","cod=…","IP=…"],"En Transferencia/Público se repiten TANIA (acrónimo) y 19444-3-25 (código), pero nunca los dos juntos."),
+ q("e22b","ldap","¿Qué estructura tiene el DIT?",["*dc=us,dc=es → tipo (ou) → subtipo (ou) → proyecto","dc=us,dc=es → proyecto → tipo","Tipo → dominio → proyecto","Todo en un nivel"],"Hay 4 DSA, uno por cada tipo."),
+ q("e22c","ldap","¿Puede un proyecto tener dos investigadores responsables?",["*Sí: IP no está en el RDN y puede tener varios valores","No: el RDN lo impide","Solo creando dos entradas","No: IP es operacional"],"Salvo que el esquema lo defina como de valor único."),
+ q("e22d","ldap","¿Qué debe cumplir un proyecto nuevo de Transferencia pública?",["*No repetir acrónimo y código a la vez con ningún hermano de ou=Público","Tener un acrónimo nuevo","Tener un código nuevo","Tener otro IP"],"Puede repetir solo uno de los dos."),
+ q("e22e","ldap","¿Cuál es el DN del proyecto MSF?",["*ac=MSF+cod=19472-6-10, ou=Básica, ou=Investigación, dc=us, dc=es","ac=MSF, ou=Investigación, dc=us, dc=es","dc=es, dc=us, ou=Investigación, ou=Básica, ac=MSF","ac=MSF+cod=19472-6-10, ou=Investigación, ou=Básica, dc=us, dc=es"],"De la hoja a la raíz: proyecto, subtipo, tipo y dominio.")]},
+{id:"p2324a-2",ex:"2",t:"ldap",title:"Parcial 23-24 A · Empresa",d:4,qs:[
+ q("e2aa","ldap","¿Cuál es el dominio de la empresa?",["*OR.mpm.com","mpm.com","OR.com","Comercial.OR.mpm.com"],"dc=OR, dc=mpm, dc=com."),
+ q("e2ab","ldap","¿Qué cuelga directamente del dominio?",["*Los departamentos (Comercial, Diseño, Desarrollo y Dirección)","Las ciudades","Las personas","Los teléfonos"],"Luego vienen las ciudades y, debajo, las personas."),
+ q("e2ac","ldap","¿Se puede guardar el teléfono de cada departamento?",["*Sí: cada departamento es un único nodo ou, con telephoneNumber","No: los departamentos se repiten bajo cada ciudad","Solo en las hojas","No: organizationalUnit no admite teléfono"],"El departamento está por encima de las ciudades: un solo nodo."),
+ q("e2ad","ldap","¿Se puede contratar a Antonio Romero Reyes en Diseño → Almería con sn=Romero?",["*No: ya existe sn=Romero en ou=Almería, ou=Diseño","Sí, sin problema","Sí, porque su nombre es distinto","No se puede en ninguna ciudad"],"En Córdoba o en otra ciudad de Diseño sí (otro padre).")]},
+{id:"p2324b-2",ex:"2",t:"ldap",title:"Parcial 23-24 B · Tiendas",d:4,qs:[
+ q("e2ba","ldap","¿Qué representa cada nivel del DIT?",["*Dominio → tienda → departamento → sección → producto","Dominio → departamento → tienda → producto","Tienda → dominio → producto","Dominio → producto"],"Son 5 niveles, como dice el enunciado."),
+ q("e2bb","ldap","¿Pueden dos productos estar en departamentos distintos?",["*Sí: tienen padres distintos","No: el RDN lo impide","Solo si tienen marcas distintas","No: cada producto está en un único sitio"],"Incluso con el mismo id+marca."),
+ q("e2bc","ldap","¿Cuántos nodos hay que consultar como mínimo para el stock de una marca y modelo?",["*3, uno por tienda","1","4, uno por departamento","Todos los productos"],"Está en la misma sección de cada tienda: se suman las tres hojas."),
+ q("e2bd","ldap","¿Se puede añadir un producto con el mismo id que XT-1234 pero de una marca nueva?",["*Sí: el RDN id+marca es distinto","No: el id ya existe","Solo en otra tienda","Solo si el modelo es el mismo"],"El RDN combina el identificador y la marca.")]},
+{id:"p2425-3",ex:"3",t:"dns",title:"Parcial 24-25 · DNS completo",d:8.5,qs:[
+ q("e3a","dns","¿Cuál es la IP de nsd.fundac.org?",["*100.1.32.57","200.9.32.44","120.3.23.34","130.30.2.17"],"Es el origen del paquete de la respuesta a B (el servidor). Por eso A y B usan el mismo DNS."),
+ q("e3b","dns","¿Qué es sptd.fide.fundac.org?",["*El secundario de fide.fundac.org (autoritativo, no primario)","El primario de fide.fundac.org","Un DNS no autoritativo","El servidor de fundac.org"],"No guardó nada en caché, así que es autoritativo; el primario (SOA) es nsd."),
+ q("e3c","dns","¿Dónde se añade www.lab.atr1.dom.edu. A 208.3.20.5?",["*En la zona atr1.dom.edu, en namser.atr1.dom.edu.","Como NS + A de lab en atr1.dom.edu","En dom.edu","En una zona lab.atr1.dom.edu"],"No hay NS de lab en la caché: lab no está delegado."),
+ q("e3d","dns","¿Qué tiene el primario de fundac.org sobre fide.fundac.org?",["*Los NS nsd y sptd y el A de sptd (glue)","Toda la zona fide","Solo el A de server4","Nada"],"Solo la delegación; el glue es obligatorio para sptd, que está dentro de fide."),
+ q("e3e","dns","¿Obtiene respuesta D en t = 2500?",["*No: su DNS (130.30.2.17) está apagado hasta t = 3000","Sí, autoritativa","Sí, desde caché","Sí, negativa"],"D no tiene caché ni otro servidor."),
+ q("e3f","dns","En t = 2900, ¿por quién empieza nsd para resolver server5.dom.edu?",["*Por nserver.edu: el NS de edu (2500) sigue vivo y los de dom.edu (2000) han caducado","Por la raíz","Por named.dom.edu","Por sname.fundac.org"],"Se guardaron en t = 500: han pasado 2400 s."),
+ q("e3g","dns","En t = 2900, ¿por qué nsd acaba preguntando a la raíz?",["*Para obtener la IP de sname.fundac.org: named está apagado y sname no tiene glue","Porque el NS de edu ha caducado","Porque server5 no existe","No pregunta a la raíz"],"sname está fuera de dom.edu, así que su IP no viene en la referencia de edu."),
+ q("e3h","dns","¿Qué recibe C en t = 5200?",["*Una respuesta negativa autoritativa: sptd aún no tiene server6 (su refresh de 5100 falló)","La IP 145.2.32.5","Nada","Una negativa no autoritativa"],"nsd está apagado desde 4500, así que sptd no puede actualizarse."),
+ q("e3i","dns","¿Qué recibe D en t = 5500?",["*Una respuesta negativa no autoritativa, que 130.30.2.17 guarda 10000 s","La IP 145.2.32.5","Nada, porque nsd está apagado","Una negativa autoritativa"],"Responde sptd, que sigue sin server6 (su retry es en 5900)."),
+ q("e3j","dns","¿Desde cuándo obtienen A y B la IP de server7?",["*Desde t = 6200","Desde t = 6000","Desde t = 6800","Desde t = 15500"],"nsd tiene server6 desde 3500 y está encendido; solo falta el alias."),
+ q("e3k","dns","¿Desde cuándo la obtiene C?",["*Desde t = 6800","Desde t = 6200","Desde t = 5900","Desde t = 15500"],"Intentos de sptd: 5100 ✗, 5900 ✗, 6700 ✓ (+100 s)."),
+ q("e3l","dns","¿Desde cuándo la obtiene D?",["*Desde t = 15500","Desde t = 6200","Desde t = 6800","Desde t = 10000"],"La negativa de t = 5500 dura 10000 s.")]}
+];
+
 /* Casos extra (nuevos, estilo examen) */
 const EXTRA=[
 {id:"cttl",t:"dns",title:"Cuenta atrás de TTL",
@@ -1729,6 +2115,8 @@ const ALL={};
 const mdCache={};
 function mdOf(id){ if(!(id in mdCache)){const el=document.getElementById(id); mdCache[id]=el?md(el.textContent):"";} return mdCache[id]; }
 Q.forEach(x=>ALL[x.id]={qq:x,ctx:null});
+P1Q.forEach(x=>ALL[x.id]={qq:x,ctx:null});
+BOL.push(...EXB);
 BOL.forEach(b=>b.qs.forEach(x=>ALL[x.id]={qq:x,ctx:{title:"Problema "+b.id+" · "+b.title,html:()=>mdOf("enu-"+b.id)}}));
 EXTRA.forEach(c=>c.qs.forEach(x=>ALL[x.id]={qq:x,ctx:{title:c.title,html:()=>`<p>${esc(c.intro)}</p><pre>${esc(c.code)}</pre>`}}));
 const poolByTema=t=>Object.values(ALL).filter(it=>it.qq.t===t);
@@ -1774,7 +2162,7 @@ let timer=null;
 function go(view,arg){
   if(timer){clearInterval(timer);timer=null}
   confirmReset=view==="home"?confirmReset:false;
-  ({home,boletin,problema,ficha,reglas,tarjetas,plan,extras,generador,escrito}[view]||home)(arg);
+  ({home,boletin,problema,ficha,reglas,tarjetas,plan,extras,generador,escrito,examenes}[view]||home)(arg);
   window.scrollTo(0,0);
 }
 
@@ -1801,6 +2189,10 @@ function home(){
     <div class="zone">${rows}</div>
   </section>
   ${todayHtml}
+  <section class="section">
+    <span class="label">Exámenes anteriores</span>
+    <div class="grid3">${["1","2","3"].map(n=>`<button class="btn small exam" data-go="examenes" data-arg="${n}"><span class="stack" style="gap:2px;align-items:center"><strong>Problema ${n}</strong><span class="sub">${{"1":"Cuestiones","2":"LDAP","3":"DNS"}[n]}</span></span></button>`).join("")}</div>
+  </section>
   <section class="section">
     <span class="label">Como en el examen (desarrollo)</span>
     ${btn('data-act="examen"',"Examen de desarrollo","4 problemas · 90 min · te corriges con la solución"+(S.bestDev!=null?" · mejor: "+S.bestDev.toFixed(1).replace(".",","):""),true)}
@@ -1843,15 +2235,15 @@ function home(){
 
 /* ================= Boletín ================= */
 function boletin(){
-  const group=(t,label)=>`<section class="section"><span class="label">${label}</span>${BOL.filter(b=>b.t===t).map(b=>btn(`data-go="problema" data-arg="${b.id}"`,`${b.id} · ${esc(b.title)}`,`Dificultad ${String(b.d).replace(".",",")}/10 · ${bolProgress(b)}/${b.qs.length} acertadas${S.dev[b.id]!=null?" · por escrito: "+S.dev[b.id].toFixed(1).replace(".",","):""}`)).join("")}</section>`;
+  const group=(t,label)=>`<section class="section"><span class="label">${label}</span>${BOL.filter(b=>b.t===t&&!b.ex).map(b=>btn(`data-go="problema" data-arg="${b.id}"`,`${b.id} · ${esc(b.title)}`,`Dificultad ${String(b.d).replace(".",",")}/10 · ${bolProgress(b)}/${b.qs.length} acertadas${S.dev[b.id]!=null?" · por escrito: "+S.dev[b.id].toFixed(1).replace(".",","):""}`)).join("")}</section>`;
   $app.innerHTML=topbar("Boletín")+`<header class="hero"><h2>Boletín resuelto</h2><p>Practica cada problema con preguntas y luego lee la solución completa.</p></header>`+
    group("dns","DNS (tema 4 del boletín)")+group("ldap","LDAP (tema 2 del boletín)")+group("ftp","TFTP (tema 3 del boletín)");
   wireGo();
 }
 function problema(id){
   const b=BOL.find(x=>x.id===id); if(!b) return boletin();
-  $app.innerHTML=`<div class="top"><div class="toprow"><button class="ghost" data-go="boletin">‹ Boletín</button><span class="count">${b.id} · ${TEMAS[b.t]}</span></div></div>
-  <header class="hero"><h2>${b.id} · ${esc(b.title)}</h2><p>Dificultad ${String(b.d).replace(".",",")}/10 · ${bolProgress(b)}/${b.qs.length} acertadas</p></header>
+  $app.innerHTML=`<div class="top"><div class="toprow"><button class="ghost" data-go="${b.ex?"examenes":"boletin"}" data-arg="${b.ex||""}">‹ ${b.ex?"Problema "+b.ex:"Boletín"}</button><span class="count">${b.ex?"Examen":b.id} · ${TEMAS[b.t]}</span></div></div>
+  <header class="hero"><h2>${b.ex?"":b.id+" · "}${esc(b.title)}</h2><p>Dificultad ${String(b.d).replace(".",",")}/10 · ${bolProgress(b)}/${b.qs.length} acertadas</p></header>
   <section class="section"><span class="label">Enunciado</span><div class="prose card-lite">${mdOf("enu-"+b.id)}</div></section>
   <section class="section"><span class="label">Preguntas</span><div class="prose card-lite">${mdOf("pre-"+b.id)}</div></section>
   <section class="section">${btn(`data-go="escrito" data-arg="${b.id}"`,"Resolver por escrito","Escribe tu respuesta y corrígete apartado por apartado"+(S.dev[b.id]!=null?" · última nota "+S.dev[b.id].toFixed(1).replace(".",","):""),true)}
@@ -1866,6 +2258,25 @@ function extras(){
   $app.innerHTML=topbar("Casos extra")+`<header class="hero"><h2>Casos extra</h2><p>Ejercicios nuevos con el mismo estilo que el examen.</p></header><section class="section">${EXTRA.map(c=>btn(`data-case="${c.id}"`,esc(c.title),`${TEMAS[c.t]} · ${c.qs.length} preguntas · ${c.qs.filter(x=>S.last[x.id]===1).length} acertadas`)).join("")}</section>`;
   wireGo();
   $app.querySelectorAll("[data-case]").forEach(b=>b.onclick=()=>{const c=EXTRA.find(x=>x.id===b.dataset.case); start(c.qs.map(x=>ALL[x.id]),c.title,extras)});
+}
+
+
+/* ================= Exámenes anteriores: vista ================= */
+function examenes(n){
+  n=["1","2","3"].includes(n)?n:"1";
+  const tabs=`<div class="grid3">${["1","2","3"].map(k=>`<button class="btn small ${k===n?"primary":""}" data-go="examenes" data-arg="${k}"><strong>P${k} · ${{"1":"Cuestiones","2":"LDAP","3":"DNS"}[k]}</strong></button>`).join("")}</div>`;
+  const pts={"1":"2 puntos · 4 cuestiones cortas","2":"3 puntos · diseñar y razonar un DIT","3":"5 puntos · caché, TTL y eventos en el tiempo"}[n];
+  const probs=EXB.filter(b=>b.ex===n);
+  const practice=n==="1"?btn('data-act="p1"',"Practicar las cuestiones",P1Q.length+" preguntas de los parciales",true):
+    btn('data-act="pall"',"Practicar con preguntas",probs.reduce((a,b)=>a+b.qs.length,0)+" preguntas de los parciales",true);
+  $app.innerHTML=topbar("Exámenes anteriores")+`<header class="hero"><span class="label">${pts}</span><h2>Problema ${n}</h2></header>
+  <section class="section">${tabs}</section>
+  <section class="section">${practice}</section>
+  ${probs.length?`<section class="section"><span class="label">Problemas de los parciales</span>${probs.map(b=>btn(`data-go="problema" data-arg="${b.id}"`,esc(b.title),`Enunciado, resolver por escrito y solución · ${bolProgress(b)}/${b.qs.length} acertadas`)).join("")}</section>`:""}
+  <section class="section"><span class="label">Apuntes</span><div class="prose card-lite">${mdOf("ap-"+n)}</div></section>`;
+  wireGo();
+  const p1=$app.querySelector('[data-act="p1"]'); if(p1) p1.onclick=()=>start(shuffle(P1Q.map(x=>ALL[x.id])),"Problema 1 · cuestiones",()=>{examenes("1");window.scrollTo(0,0)});
+  const pa=$app.querySelector('[data-act="pall"]'); if(pa) pa.onclick=()=>start(probs.flatMap(b=>b.qs.map(x=>ALL[x.id])),"Problema "+n,()=>{examenes(n);window.scrollTo(0,0)});
 }
 
 /* ================= Teoría ================= */
@@ -2025,7 +2436,7 @@ function devShow(){
   const id=dv.ids[dv.i], b=BOL.find(x=>x.id===id), n=dv.ids.length;
   $app.innerHTML=`<div class="top"><div class="toprow"><button class="ghost" data-act="salir">‹ Salir</button><span class="count">${dv.end?`<span id="clock">${fmt(dv.end-Date.now())}</span> · `:""}${n>1?"Problema "+(dv.i+1)+" / "+n:esc(dv.label)}</span></div>${n>1?`<div class="bar" aria-hidden="true"><i style="width:${Math.round(dv.i/n*100)}%"></i></div>`:""}</div>
   ${dv.exam&&dv.i===0?`<p class="note">Reparto supuesto: dos problemas de DNS, uno de LDAP y uno de TFTP. Si prefieres hacerlo en papel, deja la caja vacía y pasa a corregir.</p>`:""}
-  <header class="hero"><span class="label">${TEMAS[b.t]} · problema ${b.id}</span><h2>${esc(b.title)}</h2></header>
+  <header class="hero"><span class="label">${TEMAS[b.t]}${b.ex?" · examen":" · problema "+b.id}</span><h2>${esc(b.title)}</h2></header>
   <section class="section"><span class="label">Enunciado</span><div class="prose card-lite">${mdOf("enu-"+id)}</div></section>
   <section class="section"><span class="label">Preguntas</span><div class="prose card-lite">${mdOf("pre-"+id)}</div></section>
   <section class="section"><label class="label" for="ans-${id}">Tu respuesta</label>
@@ -2044,7 +2455,7 @@ function devCorrect(){
   const G=[["1","Bien"],["0.5","A medias"],["0","Mal"]];
   const blocks=dv.ids.map(id=>{
     const b=BOL.find(x=>x.id===id), secs=sections("sol-"+id); dv.grades[id]=dv.grades[id]||{};
-    return `<section class="section"><span class="label">${TEMAS[b.t]} · problema ${b.id} · ${esc(b.title)}</span>
+    return `<section class="section"><span class="label">${TEMAS[b.t]} · ${b.ex?"":"problema "+b.id+" · "}${esc(b.title)}</span>
       <div class="card-lite stack"><span class="label">Tu respuesta</span>${(S.ans[id]||"").trim()?`<pre class="mine">${esc(S.ans[id])}</pre>`:`<p class="sub">No escribiste nada aquí. Compara con lo que hayas hecho en papel.</p>`}</div>
       ${secs.map((sec,k)=>`<div class="card-lite stack"><h3>${inl(sec.t)}</h3><div class="prose">${sec.html}</div>
         <div class="grade" role="group" aria-label="¿Cómo te ha salido ${esc(sec.t)}?">${G.map(([v,l])=>`<button class="gbtn ${dv.grades[id][k]===+v?"on":""}" data-p="${id}" data-k="${k}" data-v="${v}">${l}</button>`).join("")}</div></div>`).join("")}

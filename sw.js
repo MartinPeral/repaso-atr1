@@ -1,5 +1,5 @@
 // Repaso ATR1: funciona sin conexión. Cambia VERSION al publicar cambios.
-const VERSION = "atr1-v3";
+const VERSION = "atr1-v4";
 const CORE = ["./", "index.html", "manifest.webmanifest", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png"];
 
 self.addEventListener("install", e => {
