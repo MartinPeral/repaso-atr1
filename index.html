@@ -1708,6 +1708,278 @@ sptd (secundario) tiene la copia de t = 0 (terminada en t = 100). Su refresh de 
 Suposición: el refresh se cuenta desde que terminó la última actualización (t = 100). Si se contara desde t = 0, C tendría la IP en 6700.
 </script>
 
+<script type="text/markdown" id="enu-p2324a-3">
+Parcial 23-24 (A). Clientes **A, B y C**, del dominio example.org y sin caché. Sus DNS por defecto: **A → 100.1.32.22**, **B → 100.1.7.25** y **C → 100.1.23.23**.
+- Todos los DNS tienen IP en **100.1.0.0/16**, y **todo lo que está en 100.1.0.0/16 es un DNS**.
+- Los dominios que no aparecen en los cuadros tienen un único servidor, `dns-server-1.XXX`. El resto de registros tiene **TTL 800**.
+- Todos los DNS tienen caché, vacía al principio. Todos se actualizaron **justo antes** de las primeras consultas.
+
+Cuadro 1, primario de **teo.atr1.edu.**:
+```
+teo.atr1.edu. 7000 IN SOA server2.teo.atr1.edu. dev.teo.atr1.edu.
+              (2023111000 4000 3600 20000 14000)
+teo.atr1.edu.          2000 IN NS mserver.teo.atr1.edu.
+teo.atr1.edu.          2000 IN NS server2.teo.atr1.edu.
+teo.atr1.edu.          1000 IN NS pserver.us.es.
+teo.atr1.edu.          1000 IN NS secserver.exam.es.
+mserver.teo.atr1.edu.  1000 IN A  100.1.32.22
+server2.teo.atr1.edu.  1500 IN A  100.1.3.10
+dns-prim.teo.atr1.edu. 1400 IN A  100.1.23.23
+mail.teo.atr1.edu.     2000 IN A  220.50.50.50
+www.teo.atr1.edu.      2500 IN A  150.210.12.7
+sftserver.teo.atr1.edu. 3000 IN A 120.10.13.7
+serfile2.teo.atr1.edu. 4500 IN A  140.40.30.7
+miserv-secret.teo.atr1.edu. 2300 IN CNAME fdem.aux.exam.es.
+```
+Cuadro 2, primario de **exam.es.**:
+```
+exam.es. 9000 IN SOA ns-serv.exam.es. resp.exam.es.
+         (2023111007 9000 4500 17000 10000)
+exam.es.               1500 IN NS ns-serv.exam.es.
+exam.es.               1500 IN NS servns.exam.es.
+ns-serv.exam.es.       3500 IN A  100.1.7.25
+servns.exam.es.        3400 IN A  100.1.8.14
+secserver.exam.es.     2000 IN A  100.1.3.22
+server-teo.exam.es.    1000 IN A  150.210.12.7
+dnsserver.aux.exam.es. 2000 IN A  100.1.10.34
+fdem.aux.exam.es.      4000 IN A  140.40.30.7
+```
+</script>
+<script type="text/markdown" id="pre-p2324a-3">
+- **a)** A, B y C preguntan por www.teo.atr1.edu. ¿Reciben respuesta? ¿Es autoritativo el servidor que responde?
+- **b)** 1200 s después, A y B preguntan el A de miserv-secret.teo.atr1.edu. Representa la resolución en cada caso: FQDN de los servidores, respuestas y tipo de consulta.
+- **c)** 8000 s después de b se pregunta server33.teo.atr1.edu. 5000 s después, el administrador añade su A. ¿Cuánto tiempo mínimo deben esperar A y B para usar server33?
+- **d)** Con todas las cachés borradas y todos los DNS del dominio edu. apagados, ¿se resuelve www.teo.atr1.edu. desde A? ¿Y desde B?
+- **e)** Representa la parte de la jerarquía inversa para los DNS de exam.es. ¿Qué RR se devuelve para el primario de exam.es.? ¿Qué servidor lo resuelve?
+</script>
+<script type="text/markdown" id="sol-p2324a-3">
+## Quién es quién
+- **A → 100.1.32.22 = mserver.teo.atr1.edu**: es NS de teo, pero no el primario del SOA (server2) → **secundario, autoritativo** de teo.atr1.edu.
+- **B → 100.1.7.25 = ns-serv.exam.es**: **primario de exam.es.** No es autoritativo de teo.
+- **C → 100.1.23.23 = dns-prim.teo.atr1.edu**: es un DNS (está en 100.1/16), pero **no aparece en los NS de teo** → **no es autoritativo**, a pesar del nombre.
+- `aux.exam.es` no tiene NS → **no está delegado**: fdem.aux.exam.es está en la zona exam.es.
+
+## a) www.teo.atr1.edu.
+- **A:** sí. mserver responde con sus datos (150.210.12.7) → **autoritativa**.
+- **B:** sí. ns-serv recorre la jerarquía (raíz → edu → atr1.edu → teo) → **no autoritativa**.
+- **C:** sí. dns-prim recorre la jerarquía → **no autoritativa**.
+
+## b) miserv-secret.teo.atr1.edu. (1200 s después)
+**Desde A (mserver):**
+1. maqA → mserver.teo.atr1.edu (recursiva).
+2. mserver tiene en sus datos `miserv-secret CNAME fdem.aux.exam.es.` Necesita el A de fdem, que no es de su zona, y no tiene caché (en a respondió con sus datos).
+3. mserver → raíz (iterativa): `es. NS dns-server-1.es.` + A.
+4. → dns-server-1.es.: `exam.es. NS ns-serv.exam.es.` y `NS servns.exam.es.` + A (100.1.7.25 y 100.1.8.14).
+5. → ns-serv.exam.es.: `fdem.aux.exam.es. A 140.40.30.7` (autoritativa).
+6. mserver → maqA: el CNAME y el A 140.40.30.7.
+
+**Desde B (ns-serv):** en a guardó la respuesta autoritativa de teo, con sus NS y A. A los 1200 s siguen vivos el **NS de server2 (2000)** y su **A (1500)**; el A de mserver (1000) y los NS de pserver y secserver (1000) han caducado.
+1. maqB → ns-serv.exam.es (recursiva).
+2. ns-serv → **server2.teo.atr1.edu** (100.1.3.10), directamente: `miserv-secret CNAME fdem.aux.exam.es.` (autoritativa).
+3. ns-serv es **primario de exam.es** → ya sabe `fdem.aux.exam.es. A 140.40.30.7`.
+4. ns-serv → maqB: el CNAME y el A.
+
+Suposición: la caché guarda los NS y A de la respuesta autoritativa de teo (con sus TTL de 2000/1000/1500) en vez de los de la delegación del padre.
+
+## c) server33 (consulta en +9200; A añadido en +14200)
+Tomo t = 0 como la primera consulta (los secundarios se actualizaron justo antes). La consulta de c es en t = 9200 y el A se añade en t = 14200 en el primario (server2). Supongo que la consulta de c se hizo desde A y desde B.
+- **A (mserver, secundario):** no usa caché (es autoritativo), pero solo ve el registro cuando se actualiza: refresh 4000 → 4000, 8000, 12000, **16000**. Espera **16000 − 14200 = 1800 s**.
+- **B (ns-serv, no autoritativo):** en t = 9200 guardó la respuesta **negativa** durante el Minimum de teo (**14000 s**), hasta **t = 23200**. Espera **23200 − 14200 = 9000 s**. Para entonces, todos los servidores de teo ya tienen el registro.
+
+## d) edu apagado y cachés borradas
+- **A: no.** mserver.teo.atr1.edu **pertenece a edu**, así que está **apagado**: A no tiene a quién preguntar.
+- **B: no.** ns-serv tiene que pasar por la raíz → edu, que está apagado. Aunque pserver.us.es y secserver.exam.es (secundarios de teo) siguen encendidos, ns-serv **no sabe que gestionan teo** sin la delegación desde atr1.edu.
+
+## e) Inversa de los DNS de exam.es (100.1.7.25 y 100.1.8.14)
+```
+. → arpa → in-addr.arpa → 100.in-addr.arpa → 1.100.in-addr.arpa
+      ├─ 7.1.100.in-addr.arpa → 25 (PTR ns-serv.exam.es.)
+      └─ 8.1.100.in-addr.arpa → 14 (PTR servns.exam.es.)
+```
+Respuesta para el primario (ns-serv, 100.1.7.25):
+```
+25.7.1.100.in-addr.arpa. 800 IN PTR ns-serv.exam.es.
+```
+La resuelve el único servidor de su zona inversa: **dns-server-1.7.1.100.in-addr.arpa.** Suposición: una zona inversa por cada red /24. Si no hubiera delegación por debajo de 1.100.in-addr.arpa, sería dns-server-1.1.100.in-addr.arpa.
+</script>
+
+<script type="text/markdown" id="enu-p2324b-3">
+Parcial 23-24 (B). maqA (dominio example.org, sin caché) pregunta **www.teo.atr1.edu.** a su DNS por defecto (con caché vacía al principio). Caché tras la respuesta (cuadro 1):
+```
+edu.              1500 IN NS dnsp.edu.
+atr1.edu.         1500 IN NS ns-serv.atr1.edu.
+teo.atr1.edu.      900 IN NS servns.atr1.edu.
+teo.atr1.edu.      900 IN NS ns2.atr1.edu.
+dnsp.edu.         1200 IN A  100.1.10.15
+ns-serv.atr1.edu. 1200 IN A  100.100.100.100
+servns.atr1.edu.   700 IN A  120.20.30.40
+ns2.atr1.edu.      800 IN A  120.20.32.33
+www.teo.atr1.edu. 1100 IN A  120.2.3.4
+```
+Un minuto después, maqA abre una conexión TCP con www y **el servidor la rechaza: no ofrece HTTP**. A los 600 s, maqA pregunta **el nombre de la IP recibida** (120.2.3.4). Se añade a la caché (cuadro 2):
+```
+arpa.                    1700 IN NS  ns-arpa.arpa.
+in-addr.arpa.            1800 IN NS  servns.in-addr.arpa.
+120.in-addr.arpa.        1500 IN NS  mserv1.120.in-addr.arpa.
+120.in-addr.arpa.        1300 IN NS  dnsserver.120.in-addr.arpa.
+2.120.in-addr.arpa.       900 IN NS  servdns.2.120.in-addr.arpa.
+4.3.2.120.in-addr.arpa.   800 IN PTR servftp.teo.atr1.edu.
+```
+Además:
+- En la zona inversa existe `7.8.2.120.in-addr.arpa. IN PTR www.teo.atr1.edu.`
+- SOA de teo: `teo.atr1.edu. 9000 IN SOA ns2.atr1.edu. admin.teo.atr1.edu. (2023112100 5500 4000 10000 12000)`
+</script>
+<script type="text/markdown" id="pre-p2324b-3">
+- **a)** Representa la parte de la jerarquía de la zona inversa.
+- **b)** ¿Qué habría que cambiar para que maqA pueda usar HTTP en www? ¿Dónde?
+- **c)** ¿Podría el DNS por defecto tener la IP 120.20.32.33? ¿Es autoritativo para 2.120.in-addr.arpa.?
+- **d)** Si los cambios se hacen 1000 s después de la primera respuesta, ¿cuánto tiempo mínimo hay que esperar para acceder al HTTP?
+- **e)** Representa la resolución de la segunda consulta: FQDN de los servidores, tipo de consulta y respuestas.
+- **f)** ¿Qué hay que añadir, y dónde, para crear el secundario m2serv.teo.atr1.edu. (120.2.70.75) de teo.atr1.edu., incluida la zona inversa?
+</script>
+<script type="text/markdown" id="sol-p2324b-3">
+## La clave del problema
+La caché dice que **www = 120.2.3.4**, pero esa IP es de **servftp** (`4.3.2.120.in-addr.arpa. PTR servftp`). La inversa dice que **www es 120.2.8.7** (`7.8.2.120.in-addr.arpa. PTR www`). → **El A de www en la zona teo está mal**: apunta al servidor FTP, que rechaza el HTTP.
+
+## a) Jerarquía inversa
+```
+. (raíz)
+└─ arpa                         ns-arpa.arpa.
+   └─ in-addr.arpa              servns.in-addr.arpa.
+      └─ 120.in-addr.arpa       mserv1.120.in-addr.arpa. / dnsserver.120.in-addr.arpa.
+         └─ 2.120.in-addr.arpa  servdns.2.120.in-addr.arpa.
+            ├─ 4.3 → PTR servftp.teo.atr1.edu.
+            └─ 7.8 → PTR www.teo.atr1.edu.
+```
+No hay NS por debajo de 2.120, así que 3.2.120 y 8.2.120 no están delegados: los PTR están en la zona 2.120.in-addr.arpa.
+
+## b) Qué cambiar
+En la zona **teo.atr1.edu.**, en su **primario ns2.atr1.edu.** (el del SOA), corregir el A y subir el serial:
+```
+www.teo.atr1.edu. IN A 120.2.8.7
+```
+
+## c) ¿DNS por defecto = 120.20.32.33?
+**No.** 120.20.32.33 es **ns2.atr1.edu**, el **primario de teo**. Si lo fuera, habría respondido con sus datos y **no tendría en caché** los NS de teo ni el A de www. Tampoco es autoritativo de **2.120.in-addr.arpa.**: tiene en caché su NS y el PTR, así que los obtuvo preguntando a otros.
+
+## d) Cambios en t = 1000
+El A viejo de www está en caché hasta **t = 1100** (TTL 1100). En t = 1100 se vuelve a preguntar: el NS de teo (900) ha caducado, pero el de atr1.edu (1500) y su A (1200) siguen vivos → ns-serv.atr1.edu → referencia a teo. Si responde **ns2 (el primario)**, ya tiene el cambio. **Mínimo: 100 s** (de 1000 a 1100). Si respondiera servns (el secundario), habría que esperar a su refresh.
+
+## e) Segunda consulta (PTR de 120.2.3.4)
+1. maqA → DNS por defecto (recursiva): ¿PTR 4.3.2.120.in-addr.arpa.?
+2. → raíz (iterativa): `arpa. NS ns-arpa.arpa.` + A.
+3. → ns-arpa.arpa.: `in-addr.arpa. NS servns.in-addr.arpa.` + A.
+4. → servns.in-addr.arpa.: `120.in-addr.arpa. NS mserv1…` y `NS dnsserver…` + A.
+5. → mserv1.120.in-addr.arpa.: `2.120.in-addr.arpa. NS servdns.2.120.in-addr.arpa.` + A.
+6. → servdns.2.120.in-addr.arpa.: `4.3.2.120.in-addr.arpa. PTR servftp.teo.atr1.edu.` (autoritativa).
+7. DNS por defecto → maqA.
+
+## f) Secundario m2serv.teo.atr1.edu. (120.2.70.75)
+- En **teo.atr1.edu.** (primario ns2.atr1.edu.), subiendo el serial:
+```
+teo.atr1.edu.          IN NS m2serv.teo.atr1.edu.
+m2serv.teo.atr1.edu.   IN A  120.2.70.75
+```
+- En el padre **atr1.edu.** (ns-serv.atr1.edu.), la delegación más el **glue** (m2serv está dentro de teo):
+```
+teo.atr1.edu.          IN NS m2serv.teo.atr1.edu.
+m2serv.teo.atr1.edu.   IN A  120.2.70.75
+```
+- En la inversa **2.120.in-addr.arpa.** (servdns.2.120.in-addr.arpa.):
+```
+75.70.2.120.in-addr.arpa. IN PTR m2serv.teo.atr1.edu.
+```
+- Y configurar m2serv como secundario que copia la zona de ns2.
+</script>
+
+<script type="text/markdown" id="enu-o2025-3">
+Examen de octubre de 2025 (el más reciente). Raíz única **raizQ (1.2.3.4)**. Cada zona tiene al menos dos DNS. **140.0.0.0/8 está reservado a los DNS** (todos están ahí). Solo los DNS tienen caché, vacía al principio. Los secundarios se actualizaron en t = 0.
+maq1.migrupo.edu. pregunta **mserver-ra12.tecnoatr.com.** a **dns-ser** (de su mismo dominio, 140.44.44.44). Se sabe que maq1 **pudo usar con éxito** mserver-ra12. Caché de dns-ser:
+```
+dominio2.example. 2200 IN NS ns-dom2.dominio2.example.
+dominio2.example. 2500 IN NS ns-dom1.dominio2.example.
+example.          1200 IN NS serv2.example.
+example.          2300 IN NS serv-exp.otrodominio.org.
+tecnoatr.com.     1000 IN NS ns2.tecnoatr.com.
+tecnoatr.com.     2000 IN NS ns1.dominio2.example.
+com.              1500 IN NS nserverA.com.
+com.              2200 IN NS nserverB.com.
+ns1.dominio2.example.     2300 IN A 140.42.4.42
+ns-dom2.dominio2.example. 2400 IN A 120.10.10.10
+ns-dom1.dominio2.example. 1500 IN A 140.90.9.9
+serv2.example.            1600 IN A 140.40.40.40
+ns2.tecnoatr1.com.        1400 IN A 140.2.1.13
+nserverA.com.             1900 IN A 140.4.4.4
+nserverB.com.             1300 IN A 140.5.5.5
+mserver-ra12.tecnoatr.com. 1700 IN CNAME www.atr1.edu.
+```
+A los 2100 s, maq1 pide **toda la información de atr1.edu.**; la respuesta solo contiene **dos NS**. Parte de ella:
+```
+atr1.edu. 5000 IN SOA midns-serv.atr1.edu. james.atr1.edu.
+          (2025101700 8000 3600 12000 9000)
+serv-prueba.atr1.edu.  2000 IN A 203.32.3.12
+serverA.lab.atr1.edu.  1300 IN A 130.3.3.3
+serverB.teo.atr1.edu.  1700 IN A 132.32.32.32
+```
+</script>
+<script type="text/markdown" id="pre-o2025-3">
+- **a)** ¿Es autoritativo para algún dominio el servidor que responde al cliente? ¿Para qué zona?
+- **b)** ¿Cuál es la IP del principal de tecnoatr.com.?
+- **c)** FQDN de todos los DNS que enviaron una respuesta durante la resolución.
+- **d)** Con esa caché, ¿se resuelve test-server.example. sin pasar por la raíz? ¿Y a los 1800 s?
+- **e)** Completa la información de atr1.edu. sabiendo que su correo primario es miservmail.lab.atr1.edu. (150.50.50.50) y el secundario miservmail2.tecnoatr.com. (151.51.51.51).
+- **f)** ¿Cuánto hay que esperar para usar serv-prueba.atr1.edu. desde maq1 si su IP cambia en t = 4500? ¿Cambia si en t = 3400 se apaga midns-serv.atr1.edu.?
+</script>
+<script type="text/markdown" id="sol-o2025-3">
+## Quién es quién
+- maq1 usó mserver-ra12 con éxito, así que obtuvo la IP de **www.atr1.edu**… pero en la caché **no hay nada de edu ni de atr1.edu**. → **dns-ser es autoritativo de atr1.edu**: sacó www.atr1.edu de sus propios datos.
+- **ns-dom2.dominio2.example (120.10.10.10)** está fuera de 140/8 → **no es un DNS**.
+- La caché tiene el A de **ns2.tecnoatr1.com** (con un "1"), pero el NS es **ns2.tecnoatr.com** → **errata** en el glue de com: no sirve para localizar ns2.tecnoatr.com.
+
+## a)
+**Sí.** dns-ser es autoritativo de la zona **atr1.edu.** No es el primario (el SOA dice midns-serv), así que es su **secundario**. Es uno de los dos NS que aparecen en la respuesta de los 2100 s.
+
+## b)
+**No se puede saber** cuál es el principal: no tenemos el SOA de tecnoatr.com, y los NS no tienen orden. Los candidatos son **ns1.dominio2.example (140.42.4.42)** y **ns2.tecnoatr.com** (IP desconocida: el A en caché es de ns2.tecnoatr1.com, por la errata).
+
+## c) Servidores que respondieron
+1. **raizQ** (1.2.3.4): `com. NS nserverA/nserverB` + A.
+2. **nserverA.com. o nserverB.com.**: `tecnoatr.com. NS ns2.tecnoatr.com. / ns1.dominio2.example.` + el A erróneo de ns2.tecnoatr1.com.
+3. Como ns2.tecnoatr.com no tiene A válido, hay que resolver **ns1.dominio2.example** (que está fuera de la zona): **raizQ** otra vez → `example. NS serv2.example. / serv-exp.otrodominio.org.` + A de serv2.
+4. **serv2.example.**: `dominio2.example. NS ns-dom1 / ns-dom2` + A.
+5. **ns-dom1.dominio2.example.** (ns-dom2 no es un DNS): `ns1.dominio2.example. A 140.42.4.42`.
+6. **ns1.dominio2.example.**: `mserver-ra12.tecnoatr.com. CNAME www.atr1.edu.`
+7. dns-ser resuelve www.atr1.edu **con sus datos** y responde a maq1 (**dns-ser.migrupo.edu.**).
+
+## d) test-server.example.
+- **Ahora: sí.** El NS de example por serv2 (1200) y su A (1600) están vivos.
+- **A los 1800 s: no.** El NS de serv2 (1200) ha caducado. Queda el NS de serv-exp.otrodominio.org (2300), pero **su A no está en caché**: hay que resolverlo desde la raíz (org).
+
+## e) Zona atr1.edu.
+```
+atr1.edu. 5000 IN SOA midns-serv.atr1.edu. james.atr1.edu.
+          (2025101700 8000 3600 12000 9000)
+atr1.edu.              IN NS midns-serv.atr1.edu.
+atr1.edu.              IN NS dns-ser.migrupo.edu.
+midns-serv.atr1.edu.   IN A  IP_midns-serv          (en 140.0.0.0/8)
+atr1.edu.              IN MX 10 miservmail.lab.atr1.edu.
+atr1.edu.              IN MX 20 miservmail2.tecnoatr.com.
+miservmail.lab.atr1.edu. IN A 150.50.50.50
+www.atr1.edu.          IN A  IP_www
+serv-prueba.atr1.edu.  2000 IN A 203.32.3.12
+serverA.lab.atr1.edu.  1300 IN A 130.3.3.3
+serverB.teo.atr1.edu.  1700 IN A 132.32.32.32
+```
+Notas:
+- lab no está delegado (sus A están aquí), así que el A de miservmail.lab va en esta zona.
+- Los A de miservmail2.tecnoatr.com (151.51.51.51) y de dns-ser.migrupo.edu (140.44.44.44) van en **sus** zonas.
+- El MX secundario lleva un número **mayor** (menos prioridad).
+
+## f) serv-prueba cambia de IP en t = 4500
+maq1 pregunta a dns-ser, **secundario autoritativo** (no usa caché para atr1.edu). Ve el cambio cuando hace refresh: actualizado en 0 → siguiente en **t = 8000**. Espera **8000 − 4500 = 3500 s**.
+**Con midns-serv apagado desde t = 3400:** el refresh de t = 8000 falla y los reintentos (cada 3600: 11600…) también. dns-ser sigue dando la **IP vieja** hasta el **Expire (t = 12000)**, y después **deja de responder** la zona. → **Nunca** obtiene la nueva IP mientras el primario siga apagado.
+</script>
+
 <script>
 /* ================= Datos ================= */
 function q(id,t,text,opts,e){return {id,t,q:text,o:opts.map(s=>s.replace(/^\*/,"")),a:opts.findIndex(s=>s.startsWith("*")),e}}
@@ -2006,7 +2278,35 @@ const EXB=[
  q("e3i","dns","¿Qué recibe D en t = 5500?",["*Una respuesta negativa no autoritativa, que 130.30.2.17 guarda 10000 s","La IP 145.2.32.5","Nada, porque nsd está apagado","Una negativa autoritativa"],"Responde sptd, que sigue sin server6 (su retry es en 5900)."),
  q("e3j","dns","¿Desde cuándo obtienen A y B la IP de server7?",["*Desde t = 6200","Desde t = 6000","Desde t = 6800","Desde t = 15500"],"nsd tiene server6 desde 3500 y está encendido; solo falta el alias."),
  q("e3k","dns","¿Desde cuándo la obtiene C?",["*Desde t = 6800","Desde t = 6200","Desde t = 5900","Desde t = 15500"],"Intentos de sptd: 5100 ✗, 5900 ✗, 6700 ✓ (+100 s)."),
- q("e3l","dns","¿Desde cuándo la obtiene D?",["*Desde t = 15500","Desde t = 6200","Desde t = 6800","Desde t = 10000"],"La negativa de t = 5500 dura 10000 s.")]}
+ q("e3l","dns","¿Desde cuándo la obtiene D?",["*Desde t = 15500","Desde t = 6200","Desde t = 6800","Desde t = 10000"],"La negativa de t = 5500 dura 10000 s.")]},
+{id:"p2324a-3",ex:"3",t:"dns",title:"Parcial 23-24 A · teo y exam.es",d:8,qs:[
+ q("ea1","dns","¿Qué es el DNS de A (100.1.32.22)?",["*mserver.teo.atr1.edu, secundario y autoritativo de teo","El primario de teo","Un DNS no autoritativo","ns-serv.exam.es"],"Es NS de teo, pero el primario del SOA es server2."),
+ q("ea2","dns","¿Y el de C (100.1.23.23)?",["*dns-prim.teo.atr1.edu: un DNS que no es autoritativo (no está en los NS de teo)","El primario de teo","No es un DNS","El secundario de teo"],"Está en 100.1/16, así que es un DNS, pero no aparece en los NS de teo."),
+ q("ea3","dns","A, B y C preguntan www.teo.atr1.edu. ¿Qué respuestas son autoritativas?",["*Solo la de A","Las de A y C","Ninguna","Todas"],"A pregunta a mserver (secundario de teo). B y C, a servidores que recorren la jerarquía."),
+ q("ea4","dns","1200 s después, ¿por dónde resuelve ns-serv (el DNS de B) miserv-secret?",["*Directo a server2.teo.atr1.edu (NS 2000 y A 1500 vivos); el A de fdem ya lo sabe por ser primario de exam.es","Por la raíz","Por mserver","Por pserver.us.es"],"El A de mserver (1000) y los NS de pserver y secserver (1000) han caducado."),
+ q("ea5","dns","¿Por qué mserver tiene que pasar por la raíz al resolver miserv-secret?",["*Tiene el CNAME en sus datos, pero el A de fdem.aux.exam.es está en otra zona y no tiene caché","Porque miserv-secret no existe","Porque server2 está apagado","No pasa por la raíz"],"Raíz → es → exam.es (ns-serv) → A de fdem."),
+ q("ea6","dns","server33 se añade en t = 14200. ¿Cuánto espera A como mínimo?",["*1800 s: mserver se actualiza cada 4000 s y la siguiente es en t = 16000","9000 s","0 s","4000 s"],"mserver es autoritativo: no guarda la negativa en caché."),
+ q("ea7","dns","¿Y B?",["*9000 s: ns-serv guardó la negativa de t = 9200 durante 14000 s (hasta 23200)","1800 s","14000 s","0 s"],"El Minimum de teo es 14000."),
+ q("ea8","dns","Con edu apagado y las cachés borradas, ¿se resuelve www.teo desde A?",["*No: mserver.teo.atr1.edu pertenece a edu y está apagado","Sí, mserver es autoritativo","Sí, por pserver.us.es","Sí, desde caché"],"Desde B tampoco: sin edu no hay delegación hasta teo."),
+ q("ea9","dns","¿Qué PTR corresponde al primario de exam.es?",["*25.7.1.100.in-addr.arpa. IN PTR ns-serv.exam.es.","14.8.1.100.in-addr.arpa. IN PTR ns-serv.exam.es.","100.1.7.25.in-addr.arpa. IN PTR ns-serv.exam.es.","25.7.1.100.in-addr.arpa. IN PTR servns.exam.es."],"ns-serv tiene la IP 100.1.7.25.")]},
+{id:"p2324b-3",ex:"3",t:"dns",title:"Parcial 23-24 B · www sin HTTP",d:7.5,qs:[
+ q("eb1","dns","¿Por qué maqA no puede usar HTTP en www?",["*El A de www apunta a 120.2.3.4, que es servftp; www es en realidad 120.2.8.7 (según el PTR)","www está apagado","Falta el NS de teo","El TTL ha caducado"],"4.3.2.120 → servftp; 7.8.2.120 → www."),
+ q("eb2","dns","¿Dónde se corrige?",["*En la zona teo.atr1.edu, en su primario ns2.atr1.edu (con el serial incrementado)","En servns.atr1.edu","En la zona inversa","En el DNS por defecto"],"Los cambios se hacen siempre en el primario."),
+ q("eb3","dns","¿Podría el DNS por defecto ser 120.20.32.33?",["*No: es ns2 (primario de teo) y no habría guardado los NS ni el A de www en caché","Sí","Solo si es secundario","No se puede saber"],"Un autoritativo responde con sus datos, sin guardarlos en caché."),
+ q("eb4","dns","¿Es el DNS por defecto autoritativo de 2.120.in-addr.arpa?",["*No: tiene en caché su NS y el PTR","Sí","Solo del PTR","No se puede saber"],"Si lo fuera, no lo habría preguntado."),
+ q("eb5","dns","Cambios en t = 1000: ¿espera mínima?",["*100 s: el A viejo caduca en t = 1100 y, si responde ns2, ya tiene el cambio","0 s","1100 s","5500 s"],"Si respondiera servns (el secundario), habría que esperar a su refresh."),
+ q("eb6","dns","En la resolución del PTR, ¿quién da la respuesta final?",["*servdns.2.120.in-addr.arpa.","mserv1.120.in-addr.arpa.","servns.in-addr.arpa.","ns-arpa.arpa."],"Recorrido: raíz → arpa → in-addr.arpa → 120 → 2.120."),
+ q("eb7","dns","Para el secundario m2serv.teo.atr1.edu, ¿qué va en atr1.edu?",["*NS de teo apuntando a m2serv + su A (glue)","Solo su A","Nada","Su PTR"],"m2serv está dentro de teo: el glue es obligatorio.")]},
+{id:"o2025-3",ex:"3",t:"dns",title:"Octubre 2025 · tecnoatr y CNAME",d:8.5,qs:[
+ q("eo1","dns","¿Es dns-ser autoritativo de algún dominio?",["*Sí, de atr1.edu: resolvió www.atr1.edu sin tener nada de edu en caché","No","Sí, de tecnoatr.com","Sí, de example"],"Además no es el primario (midns-serv), así que es secundario."),
+ q("eo2","dns","¿Qué tiene de raro ns-dom2.dominio2.example?",["*Su IP (120.10.10.10) está fuera de 140/8: no es un DNS","Su TTL","Que es primario","Nada"],"Todos los DNS tienen IP en 140.0.0.0/8."),
+ q("eo3","dns","¿Por qué hubo que resolver ns1.dominio2.example?",["*Porque el glue de ns2.tecnoatr.com es erróneo (ns2.tecnoatr1.com) y ns1 está fuera de la zona","Porque ns1 es el primario","Porque com estaba apagado","No hizo falta"],"Para resolverlo: raíz → example (serv2) → dominio2 (ns-dom1)."),
+ q("eo4","dns","¿Se puede saber la IP del principal de tecnoatr.com?",["*No: no hay SOA y los NS no tienen orden","Sí, 140.42.4.42","Sí, 140.2.1.13","Sí, 140.4.4.4"],"140.2.1.13 es de ns2.tecnoatr1.com (errata)."),
+ q("eo5","dns","¿Se resuelve test-server.example. sin raíz a los 1800 s?",["*No: el NS de serv2 (1200) caducó y del de serv-exp no hay A en caché","Sí, con serv-exp","Sí, con serv2","Sí, desde caché"],"Ahora mismo, en cambio, sí."),
+ q("eo6","dns","Cambia la IP de serv-prueba en t = 4500. ¿Cuánto espera maq1?",["*3500 s: dns-ser (secundario) se actualiza en t = 8000","2000 s (TTL)","8000 s","0 s"],"dns-ser responde con su copia de la zona."),
+ q("eo7","dns","¿Y si midns-serv se apaga en t = 3400?",["*No la obtendría: los refresh fallan; da la IP vieja hasta el Expire (12000) y luego deja de responder","3500 s igualmente","3600 s (Retry)","12000 s"],"Sin primario, el secundario no puede copiar los cambios."),
+ q("eo8","dns","¿Dónde va el A de miservmail2.tecnoatr.com?",["*En la zona tecnoatr.com, no en atr1.edu","En atr1.edu","En lab.atr1.edu","En los dos"],"En atr1.edu solo va el MX 20 apuntando a él.")]}
+
 ];
 
 /* Casos extra (nuevos, estilo examen) */
